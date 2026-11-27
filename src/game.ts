@@ -9,7 +9,7 @@ export type Game = {
 
 export const start = (): Game => ({
   scene: 'regreso',
-  stats: { trust: 4, tension: 4, fitness: 6 },
+  stats: { trust: 4, tension: 4 },
   history: [],
 })
 

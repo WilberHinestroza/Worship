@@ -8,7 +8,6 @@ import type { Game } from './game.ts'
 const sections = [
   ['psychology', 'Psicología', '◈', 'Personalidad, tensión y recuerdos.'],
   ['relationships', 'Relaciones', '♡', 'Confianza, afecto, respeto y resentimiento.'],
-  ['body', 'Transformaciones', '↟', 'Condición física y evolución corporal.'],
   ['research', 'Investigación', '♢', 'GENESIS, EVOLUTION, ASCENSION y ADAM.'],
   ['world', 'Mundo vivo', '◎', 'Iniciativas, compromisos y paso del tiempo.'],
   ['economy', 'Economía', '▤', 'Ingresos, empresas, propiedades y contratos.'],
@@ -41,10 +40,6 @@ export function Dossier({ game, world, person }: Props) {
     </> : <>
       <p>Confianza con Camila · {game?.stats.trust}/10</p>
       <p>Romance, celos, admiración y rivalidades pendientes.</p>
-    </>,
-    body: <>
-      {game && <p>Condición física de Marcus · {game.stats.fitness}/10</p>}
-      <p>Niveles musculares, altura, peso y fuerza pendientes de simulación.</p>
     </>,
     research: <>
       <p>Programas del prototipo</p>

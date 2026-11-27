@@ -13,9 +13,8 @@ test('las seis rutas cierran el capítulo con el desenlace y las estadísticas e
     const training = play(0, reply, 0, 1, 0)
     assert.equal(scenes[coffee.scene].outcome, reply === 0 ? 'puerta' : 'distancia')
     assert.equal(scenes[training.scene].outcome, 'rutina')
-    assert.equal(coffee.stats.fitness, 6)
-    assert.equal(training.stats.fitness, 7)
-    assert.deepEqual(coffee.stats, { trust: [7, 4, 4][reply], tension: [2, 4, 2][reply], fitness: 6 })
+    assert.deepEqual(coffee.stats, { trust: [7, 4, 4][reply], tension: [2, 4, 2][reply] })
+    assert.deepEqual(training.stats, coffee.stats)
     assert.deepEqual(decode(encode(coffee)), coffee)
     assert.deepEqual(decode(encode(training)), training)
   }

@@ -1,7 +1,6 @@
 export const meters = {
   trust: 'Confianza con Camila',
   tension: 'Tensión de Marcus',
-  fitness: 'Condición física',
 } as const
 
 export type Meter = keyof typeof meters
@@ -52,7 +51,7 @@ export const scenes: Record<string, Scene> = {
     text: '—Puedo ponerte un café. Si tienes que irte, dímelo ahora.\n\nMarcus mira hacia la puerta entreabierta. Ya no hay una hora marcada para regresar a ningún cuartel.',
     choices: [
       { label: 'Aceptar el café', to: 'cafe', change: { tension: -1 } },
-      { label: 'Despedirme y hacer mi rutina de entrenamiento', to: 'entreno', change: { fitness: 1, tension: -1 } },
+      { label: 'Despedirme y hacer mi rutina de entrenamiento', to: 'entreno', change: { tension: -1 } },
     ],
   },
   cafe: {

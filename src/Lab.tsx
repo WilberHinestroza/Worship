@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Dossier } from './Dossier.tsx'
-import { art, spriteArt, sprites } from './art.ts'
+import { art, castNotes, spriteArt, sprites } from './art.ts'
 import type { Sprite } from './art.ts'
 import { SceneSprite } from './SceneSprite.tsx'
 import { interpret, intents, profiles } from './simulation.ts'
@@ -172,7 +172,7 @@ export function Lab() {
             <a className={faceView ? 'sprite-face' : undefined} href={spriteArt(id)} target="_blank" rel="noreferrer" aria-label={`Ver ilustración completa de ${sprites[id]}`}>
               <img src={spriteArt(id)} alt={`${faceView ? 'Rostro' : 'Cuerpo completo'} de ${sprites[id]}`} loading="lazy" />
             </a>
-            <figcaption>{sprites[id]}</figcaption>
+            <figcaption><strong>{sprites[id]}</strong><p>{castNotes[id]}</p></figcaption>
           </figure>)}
         </div>
         <h2>Fondos e ilustraciones</h2>
