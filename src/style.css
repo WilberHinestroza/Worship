@@ -164,7 +164,19 @@ ol { margin: .1rem 0 0; padding-left: 1.25rem; color: var(--muted); }
 .vn-panel { padding: 1rem; background: #171020; border: 1px solid var(--line); }
 .vn-panel h2 { margin-top: 0; font-size: 1.15rem; }
 .vn-notice:empty { margin: 0; padding: 0; }
-.chapter-stage.vn-stage { gap: clamp(5rem, 24vh, 15rem); }
+.chapter-stage.vn-stage { container-type: inline-size; gap: clamp(11rem, 30svh, 18rem); }
+.chapter-stage .scene-cast {
+  inset: 8% 4% 0;
+  gap: clamp(.35rem, 1.6cqw, 1.75rem);
+}
+.chapter-stage .scene-cast img {
+  flex: 0 1 min(31%, 17rem);
+  width: min(31%, 17rem);
+  height: calc(min(100%, 68svh, 40rem, 76cqw) * var(--actor-scale, 1));
+  opacity: 1;
+}
+.chapter-stage .scene-cast img:only-child { flex-basis: min(70%, 25rem); width: min(70%, 25rem); }
+.chapter-stage .vn-turn { align-items: end; }
 .chapter-dialogue p { white-space: pre-line; }
 .chapter-choices { width: min(100%, 75rem); }
 .chapter-name { display: grid; justify-items: start; gap: .75rem; }
