@@ -25,7 +25,7 @@ export function SceneCast({ people, speaker, reactions }: {
       const pose = reactions[person] ?? 'neutral'
       const neutral = art(`elenco/sprites/${person}`)
       return <img key={`${person}-${pose}`}
-        src={pose === 'neutral' ? neutral : art(`elenco/gestos/${person}-${pose}`)}
+        src={pose === 'neutral' ? neutral : `${art(`elenco/gestos/${person}-${pose}`)}?v=2`}
         onError={event => {
           if (event.currentTarget.getAttribute('src') !== neutral) event.currentTarget.src = neutral
         }}
