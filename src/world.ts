@@ -1,7 +1,7 @@
-import { intents, profiles, restore as restoreLegacy } from './simulation.ts'
+import { intents, people, profiles, restore as restoreLegacy } from './simulation.ts'
 import type { Intent, Person } from './simulation.ts'
 
-const people = Object.keys(profiles) as Person[]
+const initialContacts = new Set<Person>(['camila', 'valeria', 'natalia'])
 export const blocks = ['08:00', '12:00', '16:00', '20:00']
 export const end = blocks.length * 7
 export const time = (slot: number) => slot === end
@@ -29,7 +29,7 @@ const meters = (): Meters => ({ trust: 5, affection: 4, respect: 5, resentment: 
 const relationship = (): Relationship => ({ fromMarcus: meters(), toMarcus: meters(), tension: 2 })
 export const createWorld = (seed: number): World => ({
   seed, slot: 0, commands: [], events: [], promises: [], plans: [],
-  relations: { camila: relationship(), valeria: relationship(), natalia: relationship() },
+  relations: Object.fromEntries(people.map(person => [person, relationship()])) as Record<Person, Relationship>,
 })
 
 export function known(world: World, actor: Actor) {
@@ -55,6 +55,7 @@ const changes: Record<Intent, Partial<Meters> & { tension?: number }> = {
   prometer: {},
   cumplir: { trust: 2, respect: 2, resentment: -1, tension: -2 },
   esperar: { resentment: -1, tension: -2 },
+  charlar: {},
 }
 const limit = (n: number) => Math.max(0, Math.min(10, n))
 function apply(world: World, person: Person, effect: Partial<Meters> & { tension?: number }, direction: 'fromMarcus' | 'toMarcus') {
@@ -81,7 +82,7 @@ function random(world: World, person: Person, salt: number) {
   return ((n ^ (n >>> 15)) >>> 0) / 4294967296
 }
 
-function respond(world: World, person: Person) {
+function respond(world: World, person: Person, message?: string) {
   const profile = profiles[person]
   const { toMarcus: relation, tension } = world.relations[person]
   const recent = known(world, person).slice(-8)
@@ -96,7 +97,7 @@ function respond(world: World, person: Person) {
   }
   const options = (Object.keys(scores) as (keyof typeof scores)[]).map((move, i) =>
     ({ move, score: scores[move] + random(world, person, i + 1) * 3 }))
-  const move = tension >= 8 ? 'distancia' : options.sort((a, b) => b.score - a.score)[0].move
+  const move = tension >= 8 ? 'distancia' : message?.includes('?') ? 'preguntar' : options.sort((a, b) => b.score - a.score)[0].move
   const prefix = recalled?.kind === 'broken' ? 'Quedó pendiente lo que prometiste. ' :
     recalled?.kind === 'fulfilled' ? 'Me acuerdo de lo que cumpliste. ' : ''
   const reaction = {
@@ -139,6 +140,8 @@ function advance(world: World) {
   // Each morning the cast sets plans for different times of day.
   if (world.slot % blocks.length !== 0) return
   for (const person of people) {
+    // New contacts take initiative once introduced, including in older saves.
+    if (!initialContacts.has(person) && !world.commands.some(command => command.type === 'talk' && command.person === person)) continue
     const { toMarcus, tension } = world.relations[person]
     const profile = profiles[person]
     const roll = random(world, person, 17)
@@ -176,7 +179,7 @@ export function execute(previous: World, command: Command): World {
     if (kind === 'fulfilled') world.promises = world.promises.filter(item => item.person !== person)
     if (intent !== 'cumplir' || promise) apply(world, person, changes[intent], 'toMarcus')
     if (intent === 'escuchar' || intent === 'bromear') apply(world, person, { affection: 1 }, 'fromMarcus')
-    respond(world, person)
+    respond(world, person, intent === 'charlar' ? command.text : undefined)
   }
   advance(world)
   return world

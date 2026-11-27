@@ -10,7 +10,8 @@ La agenda muestra las promesas activas de Marcus. La espera rápida ejecuta los 
 - Las relaciones mantienen confianza, afecto, respeto y resentimiento en ambas direcciones. Una respuesta puede modificar la percepción de Marcus, y sus acciones modifican la percepción del personaje. La tensión del encuentro y la personalidad influyen en la reacción.
 - Una promesa de volver se puede cumplir durante los tres bloques siguientes. Vence al terminar el tercero, hayan hablado o no. Su desenlace afecta la relación y vuelve a aparecer en conversaciones posteriores.
 - A partir del segundo día, cada personaje evalúa por la mañana si planifica tomar la iniciativa. Su objetivo, la relación y el estado actual pueden llevarlo a retomar una conversación, hacer una propuesta o marcar un límite. La decisión se ejecuta al llegar su bloque aunque Marcus solo haya esperado.
-- Cada respuesta combina rasgos, estado, recuerdos pertinentes y variación derivada de la semilla de la semana. La entrada escrita acepta expresiones reconocibles como «Te escucho» o «Prometo volver». La improvisación usa reglas y líneas locales y funciona sin un proveedor de IA.
+- Se puede conversar con los 14 personajes no jugables establecidos. Camila, Valeria y Natalia pueden tomar la iniciativa desde el principio. El resto puede hacerlo después de la primera conversación. La Galería muestra al elenco completo, incluido el protagonista.
+- La entrada acepta mensajes de hasta 240 caracteres. Las expresiones reconocibles como «Te escucho» o «Prometo volver» conservan sus efectos. Los demás mensajes quedan en la memoria como conversación neutral y reciben una respuesta guionizada. Las respuestas usan reglas locales y varían según el personaje y su estado.
 
 ## Persistencia y pruebas
 

@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Dossier } from './Dossier.tsx'
-import { art, castNotes, spriteArt, sprites } from './art.ts'
-import type { Sprite } from './art.ts'
-import { SceneSprite } from './SceneSprite.tsx'
-import { interpret, intents, profiles } from './simulation.ts'
+import { art } from './art.ts'
+import { CastArt, castName, lineup } from './CastArt.tsx'
+import { interpret, intents, people, profiles } from './simulation.ts'
 import type { Person } from './simulation.ts'
 import { createWorld, end, execute, known, loadWorld, saveWorld, shareable, time, waitForEvent } from './world.ts'
 import type { Command, World } from './world.ts'
 
 const key = 'worship-web:simulation:v2'
 const fresh = () => createWorld(crypto.getRandomValues(new Uint32Array(1))[0])
-const names = { marcus: 'Marcus', camila: profiles.camila.name, valeria: profiles.valeria.name, natalia: profiles.natalia.name }
+const displayName = (id: Person | 'marcus') => id === 'marcus' ? 'Marcus' : castName(id)
 const indicators = [['trust', 'Confianza'], ['affection', 'Afecto'], ['respect', 'Respeto'], ['resentment', 'Resentimiento']] as const
 const panels = ['Sistemas', 'Relaciones', 'Estado', 'Galería', 'Historial'] as const
 const illustrations = [
@@ -20,7 +19,7 @@ const illustrations = [
   { file: 'sala', title: 'Sala del apartamento' },
   { file: 'gimnasio', title: 'Gimnasio universitario' },
 ] as const
-const stages = { camila: 'pasillo', valeria: 'sala', natalia: 'gimnasio' } as const
+const stages: Partial<Record<Person, string>> = { camila: 'pasillo', valeria: 'sala', natalia: 'gimnasio', akira: 'gimnasio', dante: 'gimnasio' }
 
 function load() {
   try {
@@ -61,17 +60,17 @@ export function Lab() {
   function applyAction(next: World) {
     if (next === world) { setNotice('Esta acción no está disponible en este bloque.'); return }
     const updates = next.events.slice(world.events.length)
-    const changes = (Object.keys(profiles) as Person[]).flatMap(id => {
+    const changes = people.flatMap(id => {
       const before = world.relations[id].toMarcus
       const after = next.relations[id].toMarcus
       return indicators.flatMap(([stat, label]) => {
         const delta = after[stat] - before[stat]
-        return delta ? [`${names[id]} · ${label.toLowerCase()} ${delta > 0 ? '+' : ''}${delta}`] : []
+        return delta ? [`${displayName(id)} · ${label.toLowerCase()} ${delta > 0 ? '+' : ''}${delta}`] : []
       })
     })
     const milestones = updates.flatMap(event => {
-      if (event.kind === 'initiative') return [`${names[event.speaker]} tomó la iniciativa`]
-      if (event.kind === 'broken') return [`Venció la promesa con ${names[event.audience[0]]}`]
+      if (event.kind === 'initiative') return [`${displayName(event.speaker)} tomó la iniciativa`]
+      if (event.kind === 'broken') return [`Venció la promesa con ${displayName(event.audience[0])}`]
       return []
     })
     setSummary([`Bloques avanzados: ${next.slot - world.slot}`, ...milestones, ...changes].join(' · '))
@@ -83,43 +82,44 @@ export function Lab() {
 
   return <section className="lab lab-novel">
     <article className="story lab-main">
-      <div className="vn-stage lab-stage layered-stage" style={{ backgroundImage: `linear-gradient(180deg,#100a19d9,transparent 35%,#120b1c 100%), url("${art(stages[person])}")` }}>
-        <SceneSprite character={person} />
+      <div className="vn-stage lab-stage layered-stage" style={{ backgroundImage: `linear-gradient(180deg,#100a19d9,transparent 35%,#120b1c 100%), url("${art(stages[person] ?? 'seul')}")` }}>
+        <div className="lab-cast-portrait"><CastArt person={person} portrait /></div>
         <header className="vn-scene-header lab-header">
           <h1 tabIndex={-1} ref={title}>Laboratorio de personajes</h1>
           <time>{finished ? 'Semana terminada' : time(world.slot)}</time>
         </header>
         <section className="vn-dialogue lab-exchange" aria-label="Conversación reciente" aria-live="polite">
-          <strong className="vn-speaker">{latest ? names[latest.speaker] : names[person]}</strong>
+          <strong className="vn-speaker">{latest ? displayName(latest.speaker) : displayName(person)}</strong>
           <p>{latest?.text ?? 'Elige una acción para iniciar la conversación.'}</p>
         </section>
       </div>
       <div className="lab-controls">
-      <div className="lab-cast" role="group" aria-label="Personaje">
-        {(Object.keys(profiles) as Person[]).map(id => <button key={id} type="button" aria-pressed={person === id} onClick={() => {
-        setPerson(id)
+      <label htmlFor="lab-cast">Hablar con</label>
+      <select id="lab-cast" value={person} onChange={event => {
+        setPerson(event.target.value as Person)
         setText('')
         setReference('')
         setNotice('')
-        }}>{names[id]}</button>)}
-      </div>
+      }}>
+        {people.map(id => <option key={id} value={id}>{displayName(id)}</option>)}
+      </select>
       <fieldset disabled={finished}>
         <legend>Acciones de Marcus</legend>
         <div className="lab-actions">
-          {(Object.keys(intents) as (keyof typeof intents)[]).map(intent =>
+          {(Object.keys(intents) as (keyof typeof intents)[]).filter(intent => intent !== 'charlar').map(intent =>
             <button key={intent} type="button"
               disabled={(intent === 'cumplir' && !promise) || (intent === 'prometer' && (!!promise || world.slot + 3 >= end))}
               onClick={() => act({ type: 'talk', person, intent })}>{intents[intent]}</button>)}
         </div>
         <form onSubmit={event => {
           event.preventDefault()
-          const intent = interpret(text)
-          if (intent) act({ type: 'talk', person, intent, text: text.trim() })
-          else setNotice('¿Qué quieres hacer? Prueba «Te escucho», «Perdón» o una de las acciones disponibles.')
+          const message = text.trim()
+          if (message) act({ type: 'talk', person, intent: interpret(message) ?? 'charlar', text: message })
         }}>
-          <label htmlFor="free-action">Acción escrita</label>
-          <input id="free-action" value={text} maxLength={240} onChange={event => setText(event.target.value)} placeholder="Escribe tu propia acción…" />
+          <label htmlFor="free-action">Escribe un mensaje o una acción</label>
+          <input id="free-action" value={text} maxLength={240} onChange={event => setText(event.target.value)} placeholder="¿Cómo te fue hoy?" aria-describedby="lab-reply-help" />
           <button type="submit" disabled={!text.trim()}>Enviar</button>
+          <small id="lab-reply-help">Respuestas guionizadas según el personaje y la partida.</small>
         </form>
         {shareOptions.length > 0 && <details className="lab-share"><summary>Compartir un recuerdo</summary><form onSubmit={event => {
           event.preventDefault()
@@ -128,7 +128,7 @@ export function Lab() {
           <label htmlFor="share-event">Contarle algo que ocurrió</label>
           <select id="share-event" value={reference} onChange={event => setReference(event.target.value)}>
             <option value="">Selecciona un hecho</option>
-            {shareOptions.map(event => <option key={event.id} value={event.id}>{names[event.speaker]} · {event.text}</option>)}
+            {shareOptions.map(event => <option key={event.id} value={event.id}>{displayName(event.speaker)} · {event.text}</option>)}
           </select>{' '}
           <button type="submit" disabled={!reference}>Contar</button>
         </form></details>}
@@ -148,12 +148,12 @@ export function Lab() {
       <label htmlFor="event-filter">Qué mostrar</label>
       <select id="event-filter" value={filter} onChange={event => setFilter(event.target.value === 'all' ? 'all' : 'person')}>
         <option value="all">Todos los hechos</option>
-        <option value="person">Lo que sabe {names[person]}</option>
+        <option value="person">Lo que sabe {displayName(person)}</option>
       </select>
       <div className="lab-log">
         {events.length === 0 && <p>Todavía no hay hechos registrados.</p>}
         {events.slice().reverse().map(event => <div className="lab-entry" key={event.id}>
-          <p><strong>{names[event.speaker]}</strong> · {time(event.slot)}{event.kind === 'initiative' ? ' · Iniciativa propia' : ''}</p>
+          <p><strong>{displayName(event.speaker)}</strong> · {time(event.slot)}{event.kind === 'initiative' ? ' · Iniciativa propia' : ''}</p>
           <p>{event.text}</p>
           {event.reference !== undefined && visibleIds.has(event.reference) &&
             <p>Hecho relacionado: {world.events[event.reference - 1].text}</p>}
@@ -168,11 +168,9 @@ export function Lab() {
           <button type="button" aria-pressed={faceView} onClick={() => setFaceView(true)}>Rostro</button>
         </div>
         <div className="lab-gallery sprite-gallery">
-          {(Object.keys(sprites) as Sprite[]).map(id => <figure key={id}>
-            <a className={faceView ? 'sprite-face' : undefined} href={spriteArt(id)} target="_blank" rel="noreferrer" aria-label={`Ver ilustración completa de ${sprites[id]}`}>
-              <img src={spriteArt(id)} alt={`${faceView ? 'Rostro' : 'Cuerpo completo'} de ${sprites[id]}`} loading="lazy" />
-            </a>
-            <figcaption><strong>{sprites[id]}</strong><p>{castNotes[id]}</p></figcaption>
+          {lineup.map(id => <figure key={id}>
+            <CastArt person={id} portrait={faceView} />
+            <figcaption><strong>{castName(id)}</strong><p>{id === 'marcus' ? 'Regresa tras dos años de servicio militar.' : profiles[id].goal}</p></figcaption>
           </figure>)}
         </div>
         <h2>Fondos e ilustraciones</h2>
@@ -184,7 +182,7 @@ export function Lab() {
         </div>
       </section>}
       {panel === 'Relaciones' && <section className="lab-panel" aria-label="Relaciones">
-      <h2>{names[person]}</h2>
+      <h2>{displayName(person)}</h2>
       <p>{profiles[person].goal}</p>
       <table className="relationship"><caption>Relación en ambas direcciones</caption><thead>
         <tr><th scope="col">Indicador</th><th scope="col">De Marcus</th><th scope="col">Hacia Marcus</th></tr>
@@ -199,12 +197,12 @@ export function Lab() {
         <progress value={world.slot} max={end} aria-label="Progreso de la semana" />
         <span>{world.slot}/{end} bloques</span>
       </div>
-      <p>Tensión de {names[person]} · {relation.tension}/10</p>
+      <p>Tensión de {displayName(person)} · {relation.tension}/10</p>
       <p>Hechos conocidos · {memories.length}</p>
       <section className="lab-agenda">
         <h3>Agenda de Marcus</h3>
         {agenda.length ? <ul>{agenda.map(item => <li key={item.event}>
-          <strong>{names[item.person]}</strong><br />Volver antes de que termine {time(item.due).toLowerCase()}
+          <strong>{displayName(item.person)}</strong><br />Volver antes de que termine {time(item.due).toLowerCase()}
         </li>)}</ul> : <p>No hay compromisos pendientes.</p>}
       </section>
       {reset ? <div className="lab-actions">

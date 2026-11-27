@@ -9,11 +9,4 @@ export const sprites = {
 
 export type Sprite = keyof typeof sprites
 
-export const castNotes: Record<Sprite, string> = {
-  marcus: 'Protagonista. Regresa del servicio militar tras dos años de ausencia.',
-  camila: 'Reservada y directa. Quiere saber si puede volver a confiar en Marcus.',
-  valeria: 'Atenta y cálida. Procura mantener abierta la comunicación.',
-  natalia: 'Atleta y decidida. Prefiere convertir las palabras en acciones.',
-}
-
 export const spriteArt = (sprite: Sprite) => art(`sprites/${sprite}-base`)

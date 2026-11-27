@@ -59,3 +59,15 @@ test('la espera rápida ejecuta los bloques ordinarios hasta el primer evento', 
   while (week.slot < end) week = waitForEvent(week)
   assert.equal(waitForEvent(week), week)
 })
+
+test('un personaje incorporado responde y conserva el mensaje libre al cargar', () => {
+  const opening = createWorld(21)
+  const text = '¿Podemos hablar sobre la universidad?'
+  const next = execute(opening, { type: 'talk', person: 'mina', intent: 'charlar', text })
+  assert.equal(next.slot, 1)
+  assert.equal(known(next, 'mina')[0].text, text)
+  assert.equal(known(next, 'mina')[1].speaker, 'mina')
+  assert.deepEqual(known(next, 'camila'), [])
+  assert.deepEqual(next.relations.mina.toMarcus, opening.relations.mina.toMarcus)
+  assert.deepEqual(loadWorld(saveWorld(next)), next)
+})
