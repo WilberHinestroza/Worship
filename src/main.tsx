@@ -25,6 +25,7 @@ function App() {
   const [lab, setLab] = useState(false)
   const [notice, setNotice] = useState('')
   const [confirmNew, setConfirmNew] = useState(false)
+  const [gamePanel, setGamePanel] = useState<'history' | 'status' | null>(null)
   const heading = useRef<HTMLHeadingElement>(null)
   const scene = game ? scenes[game.scene] : null
 
@@ -34,8 +35,16 @@ function App() {
 
   function enter(next: Game) {
     setGame(next)
+    setGamePanel(null)
     setConfirmNew(false)
     setNotice('')
+  }
+
+  function goToMenu() {
+    setGame(null)
+    setLab(false)
+    setNotice('')
+    setGamePanel(null)
   }
 
   function save() {
@@ -52,11 +61,10 @@ function App() {
   return (
     <main>
       <header className="top">
-        <button className="brand" type="button" onClick={() => { setLab(false); setGame(null); setNotice('') }} aria-label="WORSHIP, menú principal">
+        <button className="brand" type="button" onClick={goToMenu} aria-label="WORSHIP, menú principal">
           <span aria-hidden="true">◇</span> WORSHIP
         </button>
-        {game && <button className="quiet" type="button" onClick={save}>Guardar partida</button>}
-        {!game && <small>WEB EDITION · 2.0</small>}
+        <small>WEB EDITION · 2.0</small>
       </header>
       {lab ? <Lab /> : !game || !scene ? (
         <section className="hero" style={{ backgroundImage: `linear-gradient(90deg,#100a19 4%,#130b20b8 39%,#100a1933 100%), url("${art('seul')}")` }}>
@@ -66,9 +74,9 @@ function App() {
             <p className="themes">LOVE · POWER · OBSESSION · TRANSCENDENCE</p>
             <p className="question">¿Hasta dónde llegarías para superar tu propia humanidad?</p>
             <div className="actions">
-              <button className="primary" type="button" onClick={() => { setConfirmNew(false); setLab(true) }}>Laboratorio de personajes</button>
-              <button type="button" onClick={() => saved ? setConfirmNew(true) : enter(start())}>Demo del capítulo I</button>
+              <button className="primary" type="button" onClick={() => saved ? setConfirmNew(true) : enter(start())}>Nueva partida</button>
               {saved && <button type="button" onClick={() => enter(saved)}>Continuar partida</button>}
+              <button type="button" onClick={() => { setConfirmNew(false); setLab(true) }}>Laboratorio de personajes</button>
             </div>
             {confirmNew && <div className="confirm" role="group" aria-label="Confirmar nueva partida">
               <p>Al guardar una nueva partida, se reemplazará el avance anterior.</p>
@@ -78,27 +86,38 @@ function App() {
           </div>
         </section>
       ) : (
-        <div className="layout">
-          <article className="story">
-            <div className="scene-art" style={{ backgroundImage: `linear-gradient(0deg,#130e1c 0%,transparent 55%), url("${art(scene.art ?? 'seul')}")` }}>
-              <p className="eyebrow">CAPÍTULO I <span>·</span> EL REGRESO</p>
-              <h1 ref={heading} tabIndex={-1}>{scene.name}</h1>
-            </div>
-            <div className="dialogue">
-              <div className="scene-meta">
-                <strong>{scene.speaker}</strong>
-                <time dateTime={`2027-02-23T${scene.time}`}>23 FEB 2027 · {scene.time}</time>
+        <section className="vn-frame" aria-label="Capítulo I">
+          <article className="vn-stage" style={{ backgroundImage: `linear-gradient(180deg,#0b0712cb,transparent 35%,#0d0814 100%), url("${art(scene.art ?? (game.scene === 'regreso' ? 'pasillo' : 'seul'))}")` }}>
+            <header className="vn-scene-header">
+              <div>
+                <p className="eyebrow">CAPÍTULO I · EL REGRESO</p>
+                <h1 ref={heading} tabIndex={-1}>{scene.name}</h1>
               </div>
-              {scene.text.split('\n\n').map(paragraph => <p key={paragraph}>{paragraph}</p>)}
-              <div className="choices">
+                <time dateTime={`2027-02-23T${scene.time}`}>23 FEB 2027 · {scene.time}</time>
+            </header>
+            <div className="vn-turn">
+              {scene.choices && scene.choices.length > 1 && <div className="vn-options" aria-label="Decisiones">
                 {scene.choices?.map((choice, index) => (
-                  <button className="choice" type="button" key={choice.label} onClick={() => enter(choose(game, index))}>{choice.label}</button>
+                  <button type="button" key={choice.label} onClick={() => enter(choose(game, index))}>{choice.label}</button>
                 ))}
-                {scene.outcome && <button type="button" className="primary" onClick={() => { setGame(null); setNotice('') }}>Volver al menú</button>}
+              </div>}
+              <div className="vn-dialogue" aria-live="polite">
+                <strong className="vn-speaker">{scene.speaker}</strong>
+                {scene.text.split('\n\n').map(paragraph => <p key={paragraph}>{paragraph}</p>)}
+                {scene.choices?.length === 1 && <button className="vn-advance" type="button" onClick={() => enter(choose(game, 0))}>{scene.choices[0].label}</button>}
+                {scene.outcome && <button type="button" className="vn-advance" onClick={goToMenu}>Volver al menú</button>}
               </div>
             </div>
           </article>
-          <aside className="sidebar" aria-label="Estado de la partida">
+          <nav className="vn-quick" aria-label="Controles de partida">
+            <button type="button" aria-expanded={gamePanel === 'history'} onClick={() => setGamePanel(gamePanel === 'history' ? null : 'history')}>Historial</button>
+            <button type="button" aria-expanded={gamePanel === 'status'} onClick={() => setGamePanel(gamePanel === 'status' ? null : 'status')}>Estado</button>
+            <button type="button" onClick={save}>Guardar partida</button>
+            <button type="button" disabled={!saved} onClick={() => { if (saved) enter(saved) }}>Cargar partida</button>
+            <button type="button" onClick={goToMenu}>Menú</button>
+          </nav>
+          <p className="vn-notice" role="status">{notice}</p>
+          {gamePanel === 'status' && <aside className="vn-panel" aria-label="Estado de la partida">
             <h2>Estado de Marcus</h2>
             {(Object.keys(meters) as Meter[]).map(key => (
               <div className="stat" key={key}>
@@ -106,13 +125,12 @@ function App() {
                 <meter min={0} max={10} value={game.stats[key]} aria-label={meters[key]} />
               </div>
             ))}
-            <details>
-              <summary>Historial de decisiones ({game.history.length})</summary>
+          </aside>}
+          {gamePanel === 'history' && <aside className="vn-panel" aria-label="Historial de decisiones">
+              <h2>Historial de decisiones</h2>
               {game.history.length ? <ol>{game.history.map(entry => <li key={entry.scene}>{entry.label}</li>)}</ol> : <p>Aún no hay decisiones.</p>}
-            </details>
-            <p className="notice" role="status">{notice}</p>
-          </aside>
-        </div>
+          </aside>}
+        </section>
       )}
     </main>
   )

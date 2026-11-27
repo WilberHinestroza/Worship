@@ -12,6 +12,7 @@ const panels = ['Relaciones', 'Estado', 'Galería', 'Historial'] as const
 const illustrations = [
   { file: 'camila', title: 'Camila junto a la puerta' },
   { file: 'seul', title: 'Seúl al anochecer' },
+  { file: 'pasillo', title: 'Pasillo del séptimo piso' },
 ] as const
 const art = (file: string) => `${import.meta.env.BASE_URL}art/${file}.webp`
 
@@ -75,13 +76,13 @@ export function Lab() {
 
   return <section className="lab lab-novel">
     <article className="story lab-main">
-      <div className="lab-stage" style={{ backgroundImage: `linear-gradient(180deg,#100a19d9,transparent 43%,#120b1c 100%), url("${art(person === 'camila' ? 'camila' : 'seul')}")` }}>
-        <header className="lab-header">
+      <div className="vn-stage lab-stage" style={{ backgroundImage: `linear-gradient(180deg,#100a19d9,transparent 35%,#120b1c 100%), url("${art(person === 'camila' ? 'camila' : 'seul')}")` }}>
+        <header className="vn-scene-header lab-header">
           <h1 tabIndex={-1} ref={title}>Laboratorio de personajes</h1>
           <time>{finished ? 'Semana terminada' : time(world.slot)}</time>
         </header>
-        <section className="lab-exchange" aria-label="Conversación reciente" aria-live="polite">
-          <p className="eyebrow">{latest ? names[latest.speaker] : names[person]}</p>
+        <section className="vn-dialogue lab-exchange" aria-label="Conversación reciente" aria-live="polite">
+          <strong className="vn-speaker">{latest ? names[latest.speaker] : names[person]}</strong>
           <p>{latest?.text ?? 'Elige una acción para iniciar la conversación.'}</p>
         </section>
       </div>
@@ -129,7 +130,7 @@ export function Lab() {
         </div>
       </fieldset>
       <p className="lab-outcome" role="status">{notice || summary || (finished ? 'Puedes revisar la bitácora o iniciar otra semana.' : '')}</p>
-      <nav className="lab-panel-nav" aria-label="Paneles de la partida">
+      <nav className="vn-quick lab-panel-nav" aria-label="Paneles de la partida">
         {panels.map(item => <button key={item} type="button" aria-expanded={panel === item}
           onClick={() => setPanel(panel === item ? null : item)}>{item}</button>)}
       </nav>

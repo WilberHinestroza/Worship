@@ -89,6 +89,38 @@ ol { margin: .1rem 0 0; padding-left: 1.25rem; color: var(--muted); }
 .lab-gallery figure { margin: 0; }
 .lab-gallery img { display: block; width: 100%; height: auto; border-radius: .3rem; }
 .lab-gallery figcaption { color: var(--muted); margin-top: .4rem; }
+.vn-frame { max-width: 96rem; margin: 0 auto; }
+.vn-stage { display: flex; flex-direction: column; justify-content: space-between; gap: 5rem; min-height: min(47rem, calc(100svh - 8rem)); background-color: #21142e; background-position: center 34%; background-size: cover; padding: clamp(.9rem, 3vw, 2.5rem); }
+.vn-scene-header { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1rem; }
+.vn-scene-header h1 { margin: .25rem 0; font-size: clamp(1.5rem, 4vw, 2.85rem); text-shadow: 0 2px 9px #090610; }
+.vn-scene-header time { color: #f6e8ff; background: #171022e6; border: 1px solid var(--line); border-radius: .2rem; padding: .4rem .65rem; }
+.vn-turn { display: grid; gap: 1rem; }
+.vn-options { display: grid; gap: .5rem; width: min(100%, 34rem); margin: 0 auto; }
+.vn-options button { border-color: #bd8cf2; background: #251638f5; }
+.vn-options button:hover, .vn-options button:focus-visible { background: #452762; }
+.vn-dialogue { width: min(100%, 75rem); margin: 0 auto; padding: clamp(.85rem, 3vw, 1.65rem); background: #120c1cf5; border: 1px solid #8967b0; border-top: 2px solid #bc96e7; border-radius: .3rem; }
+.vn-dialogue p { max-width: 80ch; margin: .45rem 0; font: clamp(1.08rem, 2.2vw, 1.35rem)/1.5 Georgia, serif; overflow-wrap: anywhere; }
+.vn-speaker { color: #e1b8ff; font-size: .95rem; letter-spacing: .035em; }
+.vn-advance { display: block; margin: .75rem 0 0 auto; background: #d2a4ff; color: #18082c; font-weight: 750; }
+.vn-advance:hover { background: #e5c7ff; }
+.vn-quick { display: flex; justify-content: center; flex-wrap: wrap; gap: .25rem .7rem; padding: .4rem .75rem; background: #110a19; border-block: 1px solid var(--line); }
+.vn-quick button { background: transparent; color: #e0c5f8; border-color: transparent; }
+.vn-quick button:hover, .vn-quick button[aria-expanded="true"] { background: #332047; border-color: var(--line); color: #fff; }
+.vn-quick button:disabled { opacity: .55; cursor: default; }
+.vn-panel, .vn-notice { max-width: 75rem; margin: .7rem auto; padding: 0 1rem; }
+.vn-panel { padding: 1rem; background: #171020; border: 1px solid var(--line); }
+.vn-panel h2 { margin-top: 0; font-size: 1.15rem; }
+.vn-notice:empty { margin: 0; padding: 0; }
+.lab-stage.vn-stage { min-height: clamp(19rem, 48vw, 34rem); }
+.lab-panel-nav.vn-quick { padding: .4rem 0; border-bottom: 0; background: transparent; }
+.hero .actions { flex-direction: column; align-items: stretch; max-width: 17rem; }
+.hero .actions button { text-align: left; }
+@media (max-width: 45rem) {
+  .vn-stage { min-height: min(39rem, calc(100svh - 7rem)); gap: 6rem; }
+  .vn-dialogue { border-radius: .25rem; }
+  .vn-quick { gap: .2rem; }
+  .vn-quick button { padding-inline: .55rem; }
+}
 .lab-entry { overflow-wrap: anywhere; }
 .lab-agenda { margin: 1.1rem 0; padding-top: .65rem; border-top: 1px solid var(--line); }
 .lab-agenda h3 { font-size: 1rem; margin: 0 0 .4rem; }
