@@ -1,11 +1,17 @@
-# Sistema de personajes
+# Motor de personajes de WORSHIP
 
-El laboratorio permite probar el motor sin avanzar la historia. Los perfiles psicológicos de Camila, Valeria y Natalia son valores de prueba pendientes de validar con el canon de WORSHIP 2.0.
+El laboratorio simula siete días con cuatro bloques por día. Hablar, contar un hecho y pasar el tiempo consumen un bloque. La demo del capítulo I usa su propio guion y guardado.
 
-Cada personaje conserva por separado su confianza, tensión, promesa activa y memoria de interacciones. La conversación registra el turno, la intención y su impacto. Repetir presión empeora la reacción. Presiones recientes y promesas cumplidas o incumplidas pueden reaparecer en una respuesta. Una promesa puede cumplirse durante los siguientes tres turnos globales. En el cuarto vence, incluso si Marcus habla con otra persona.
+## Estado y reglas
 
-En cada turno el personaje decide si se abre, se distancia, pregunta o propone algo. La puntuación usa su cautela, calidez e iniciativa, además de la confianza, tensión y recuerdos. Con tensión alta se distancia. Una semilla de sesión introduce variación acotada, tanto en la decisión como en su redacción. Al recargar se reconstruye la misma conversación a partir de la semilla y las acciones guardadas.
+- El registro de hechos identifica al emisor, al público y, cuando corresponde, al hecho que se recordó o divulgó. Un hecho privado pasa a otra persona al contárselo explícitamente. La bitácora permite examinar el conocimiento de cada personaje.
+- Las relaciones mantienen confianza, afecto, respeto y resentimiento en ambas direcciones. Una respuesta puede modificar la percepción de Marcus, y sus acciones modifican la percepción del personaje. La tensión del encuentro y la personalidad influyen en la reacción.
+- Una promesa de volver se puede cumplir durante los tres bloques siguientes. Vence al terminar el tercero, hayan hablado o no. Su desenlace afecta la relación y vuelve a aparecer en conversaciones posteriores.
+- A partir del segundo día, cada personaje evalúa por la mañana si planifica tomar la iniciativa. Su objetivo, la relación y el estado actual pueden llevarlo a retomar una conversación, hacer una propuesta o marcar un límite. La decisión se ejecuta al llegar su bloque aunque Marcus solo haya esperado.
+- Cada respuesta combina rasgos, estado, recuerdos pertinentes y variación derivada de la semilla de la semana. La entrada escrita acepta expresiones reconocibles como «Te escucho» o «Prometo volver». La improvisación usa reglas y líneas locales y funciona sin un proveedor de IA.
 
-El motor utiliza respuestas y reglas locales. La entrada escrita interpreta fórmulas explícitas, como «Te escucho», «Perdón», «Exijo», «Bromeo», «Prometo volver», «Volví como prometí» y «Te doy espacio». Para incorporar lenguaje abierto más adelante, el intérprete tendría que producir acciones validadas que este mismo motor pueda aplicar. La ficción dinámica de esta versión cubre intercambios entre Marcus y un personaje por turno.
+## Persistencia y pruebas
 
-La sesión se guarda automáticamente en el navegador, en un espacio independiente de la demo. El límite actual es de 200 turnos por sesión. `src/simulation.ts` contiene el motor y los perfiles. `src/Lab.tsx` proporciona la interfaz de pruebas. Los cambios en las reglas de decisión deben considerar migrar el formato de guardado para conservar la reproducción de sesiones anteriores.
+Las sesiones se guardan de forma automática en el navegador. El formato 2 reconstruye el estado desde la semilla y las acciones. Si cambia una regla de simulación, conserva el motor de reproducción anterior o añade una migración antes de reutilizar el formato. El laboratorio importa acciones válidas de sesiones de la primera versión dentro de la capacidad de una semana. Las respuestas y el reloj de una sesión importada se calculan con las reglas nuevas. El guardado anterior conserva su clave original.
+
+`src/world.ts` administra el reloj, los hechos, las relaciones y las decisiones. `src/simulation.ts` contiene los perfiles, las intenciones y el formato anterior. `src/Lab.tsx` muestra las acciones y el motivo de cada respuesta. Los perfiles y los valores iniciales son provisionales y podrán ajustarse sin escribir capítulos.

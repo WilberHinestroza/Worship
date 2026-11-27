@@ -57,6 +57,11 @@ ol { margin: .1rem 0 0; padding-left: 1.25rem; color: var(--muted); }
 .lab dl { display: grid; grid-template-columns: 1fr auto; gap: .4rem; }
 .lab dd { margin: 0; }
 .lab details { margin-bottom: 1rem; }
+.lab fieldset { min-width: 0; margin: 1rem 0; padding: .8rem; border: 1px solid var(--line); }
+.lab legend { padding-inline: .4rem; color: var(--violet); }
+.relationship { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: .875rem; }
+.relationship caption { text-align: left; color: var(--violet); font-weight: 700; }
+.relationship th, .relationship td { padding: .35rem .2rem; text-align: left; border-bottom: 1px solid var(--line); }
 @media (max-width: 45rem) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .hero { background-position: 57% center; align-items: end; padding-bottom: max(3rem, env(safe-area-inset-bottom)); }
