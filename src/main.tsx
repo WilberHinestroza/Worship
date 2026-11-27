@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Lab } from './Lab.tsx'
+import { Dossier } from './Dossier.tsx'
 import { choose, decode, encode, start } from './game.ts'
 import type { Game } from './game.ts'
 import { meters, scenes } from './story.ts'
@@ -25,7 +26,7 @@ function App() {
   const [lab, setLab] = useState(false)
   const [notice, setNotice] = useState('')
   const [confirmNew, setConfirmNew] = useState(false)
-  const [gamePanel, setGamePanel] = useState<'history' | 'status' | null>(null)
+  const [gamePanel, setGamePanel] = useState<'history' | 'status' | 'systems' | null>(null)
   const heading = useRef<HTMLHeadingElement>(null)
   const scene = game ? scenes[game.scene] : null
 
@@ -110,6 +111,7 @@ function App() {
             </div>
           </article>
           <nav className="vn-quick" aria-label="Controles de partida">
+            <button type="button" aria-expanded={gamePanel === 'systems'} onClick={() => setGamePanel(gamePanel === 'systems' ? null : 'systems')}>Sistemas</button>
             <button type="button" aria-expanded={gamePanel === 'history'} onClick={() => setGamePanel(gamePanel === 'history' ? null : 'history')}>Historial</button>
             <button type="button" aria-expanded={gamePanel === 'status'} onClick={() => setGamePanel(gamePanel === 'status' ? null : 'status')}>Estado</button>
             <button type="button" onClick={save}>Guardar partida</button>
@@ -117,6 +119,7 @@ function App() {
             <button type="button" onClick={goToMenu}>Menú</button>
           </nav>
           <p className="vn-notice" role="status">{notice}</p>
+          {gamePanel === 'systems' && <Dossier game={game} />}
           {gamePanel === 'status' && <aside className="vn-panel" aria-label="Estado de la partida">
             <h2>Estado de Marcus</h2>
             {(Object.keys(meters) as Meter[]).map(key => (

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Dossier } from './Dossier.tsx'
 import { interpret, intents, profiles } from './simulation.ts'
 import type { Person } from './simulation.ts'
 import { createWorld, end, execute, known, loadWorld, saveWorld, shareable, time, waitForEvent } from './world.ts'
@@ -8,7 +9,7 @@ const key = 'worship-web:simulation:v2'
 const fresh = () => createWorld(crypto.getRandomValues(new Uint32Array(1))[0])
 const names = { marcus: 'Marcus', camila: profiles.camila.name, valeria: profiles.valeria.name, natalia: profiles.natalia.name }
 const indicators = [['trust', 'Confianza'], ['affection', 'Afecto'], ['respect', 'Respeto'], ['resentment', 'Resentimiento']] as const
-const panels = ['Relaciones', 'Estado', 'Galería', 'Historial'] as const
+const panels = ['Sistemas', 'Relaciones', 'Estado', 'Galería', 'Historial'] as const
 const illustrations = [
   { file: 'camila', title: 'Camila junto a la puerta' },
   { file: 'seul', title: 'Seúl al anochecer' },
@@ -134,6 +135,7 @@ export function Lab() {
         {panels.map(item => <button key={item} type="button" aria-expanded={panel === item}
           onClick={() => setPanel(panel === item ? null : item)}>{item}</button>)}
       </nav>
+      {panel === 'Sistemas' && <Dossier world={world} person={person} />}
       {panel === 'Historial' && <section className="lab-panel" aria-label="Historial">
       <h2>Bitácora ({world.events.length})</h2>
       <label htmlFor="event-filter">Qué mostrar</label>
