@@ -8,6 +8,12 @@ const key = 'worship-web:simulation:v2'
 const fresh = () => createWorld(crypto.getRandomValues(new Uint32Array(1))[0])
 const names = { marcus: 'Marcus', camila: profiles.camila.name, valeria: profiles.valeria.name, natalia: profiles.natalia.name }
 const indicators = [['trust', 'Confianza'], ['affection', 'Afecto'], ['respect', 'Respeto'], ['resentment', 'Resentimiento']] as const
+const panels = ['Relaciones', 'Estado', 'Galería', 'Historial'] as const
+const illustrations = [
+  { file: 'camila', title: 'Camila junto a la puerta' },
+  { file: 'seul', title: 'Seúl al anochecer' },
+] as const
+const art = (file: string) => `${import.meta.env.BASE_URL}art/${file}.webp`
 
 function load() {
   try {
@@ -25,6 +31,7 @@ export function Lab() {
   const [reset, setReset] = useState(false)
   const [filter, setFilter] = useState<'all' | 'person'>('all')
   const [summary, setSummary] = useState('')
+  const [panel, setPanel] = useState<(typeof panels)[number] | null>(null)
   const title = useRef<HTMLHeadingElement>(null)
   useEffect(() => { title.current?.focus() }, [])
   const relation = world.relations[person]
@@ -66,17 +73,19 @@ export function Lab() {
   }
   const act = (command: Command) => applyAction(execute(world, command))
 
-  return <section className="layout lab">
-    <header className="lab-header">
-      <p className="eyebrow">WORSHIP · SIMULACIÓN</p>
-      <h1 tabIndex={-1} ref={title}>Laboratorio de personajes</h1>
-      <div className="lab-clock">
-        <strong>{finished ? 'Semana terminada' : time(world.slot)}</strong>
-        <progress value={world.slot} max={end} aria-label="Progreso de la semana" />
-        <span>{world.slot}/{end} bloques</span>
+  return <section className="lab lab-novel">
+    <article className="story lab-main">
+      <div className="lab-stage" style={{ backgroundImage: `linear-gradient(180deg,#100a19d9,transparent 43%,#120b1c 100%), url("${art(person === 'camila' ? 'camila' : 'seul')}")` }}>
+        <header className="lab-header">
+          <h1 tabIndex={-1} ref={title}>Laboratorio de personajes</h1>
+          <time>{finished ? 'Semana terminada' : time(world.slot)}</time>
+        </header>
+        <section className="lab-exchange" aria-label="Conversación reciente" aria-live="polite">
+          <p className="eyebrow">{latest ? names[latest.speaker] : names[person]}</p>
+          <p>{latest?.text ?? 'Elige una acción para iniciar la conversación.'}</p>
+        </section>
       </div>
-    </header>
-    <article className="story dialogue lab-main">
+      <div className="lab-controls">
       <div className="lab-cast" role="group" aria-label="Personaje">
         {(Object.keys(profiles) as Person[]).map(id => <button key={id} type="button" aria-pressed={person === id} onClick={() => {
         setPerson(id)
@@ -85,10 +94,6 @@ export function Lab() {
         setNotice('')
         }}>{names[id]}</button>)}
       </div>
-      <section className="lab-exchange" aria-label="Conversación reciente">
-        <p className="eyebrow">{latest ? names[latest.speaker] : names[person]}</p>
-        <p>{latest?.text ?? 'Elige una acción para iniciar la conversación.'}</p>
-      </section>
       <fieldset disabled={finished}>
         <legend>Acciones de Marcus</legend>
         <div className="lab-actions">
@@ -104,7 +109,7 @@ export function Lab() {
           else setNotice('¿Qué quieres hacer? Prueba «Te escucho», «Perdón» o una de las acciones disponibles.')
         }}>
           <label htmlFor="free-action">Acción escrita</label>
-          <input id="free-action" value={text} maxLength={240} onChange={event => setText(event.target.value)} placeholder="Te escucho" />
+          <input id="free-action" value={text} maxLength={240} onChange={event => setText(event.target.value)} placeholder="Escribe tu propia acción…" />
           <button type="submit" disabled={!text.trim()}>Enviar</button>
         </form>
         {shareOptions.length > 0 && <details className="lab-share"><summary>Compartir un recuerdo</summary><form onSubmit={event => {
@@ -124,7 +129,12 @@ export function Lab() {
         </div>
       </fieldset>
       <p className="lab-outcome" role="status">{notice || summary || (finished ? 'Puedes revisar la bitácora o iniciar otra semana.' : '')}</p>
-      <details className="lab-history"><summary>Bitácora ({world.events.length})</summary>
+      <nav className="lab-panel-nav" aria-label="Paneles de la partida">
+        {panels.map(item => <button key={item} type="button" aria-expanded={panel === item}
+          onClick={() => setPanel(panel === item ? null : item)}>{item}</button>)}
+      </nav>
+      {panel === 'Historial' && <section className="lab-panel" aria-label="Historial">
+      <h2>Bitácora ({world.events.length})</h2>
       <label htmlFor="event-filter">Qué mostrar</label>
       <select id="event-filter" value={filter} onChange={event => setFilter(event.target.value === 'all' ? 'all' : 'person')}>
         <option value="all">Todos los hechos</option>
@@ -140,20 +150,31 @@ export function Lab() {
           {event.reason && <details><summary>Motivo de la decisión</summary><p>{event.reason}</p></details>}
         </div>)}
       </div>
-      </details>
-    </article>
-    <aside className="sidebar">
+      </section>}
+      {panel === 'Galería' && <section className="lab-panel lab-gallery" aria-label="Galería">
+        {illustrations.map(({ file, title }) => <figure key={file}>
+          <img src={art(file)} alt={title} loading="lazy" width="768" height="432" />
+          <figcaption>{title}</figcaption>
+        </figure>)}
+      </section>}
+      {panel === 'Relaciones' && <section className="lab-panel" aria-label="Relaciones">
       <h2>{names[person]}</h2>
       <p>{profiles[person].goal}</p>
-      <p>Tensión: {relation.tension}/10</p>
-      <p>Hechos conocidos: {memories.length}</p>
-      <p>Promesa pendiente: {promise ? time(promise.due) : 'Ninguna'}</p>
       <table className="relationship"><caption>Relación en ambas direcciones</caption><thead>
         <tr><th scope="col">Indicador</th><th scope="col">De Marcus</th><th scope="col">Hacia Marcus</th></tr>
       </thead><tbody>
         {indicators.map(([stat, label]) =>
           <tr key={stat}><th scope="row">{label}</th><td>{relation.fromMarcus[stat]}/10</td><td>{relation.toMarcus[stat]}/10</td></tr>)}
       </tbody></table>
+      </section>}
+      {panel === 'Estado' && <section className="lab-panel" aria-label="Estado">
+      <h2>Estado de la partida</h2>
+      <div className="lab-clock">
+        <progress value={world.slot} max={end} aria-label="Progreso de la semana" />
+        <span>{world.slot}/{end} bloques</span>
+      </div>
+      <p>Tensión de {names[person]} · {relation.tension}/10</p>
+      <p>Hechos conocidos · {memories.length}</p>
       <section className="lab-agenda">
         <h3>Agenda de Marcus</h3>
         {agenda.length ? <ul>{agenda.map(item => <li key={item.event}>
@@ -164,6 +185,8 @@ export function Lab() {
         <button type="button" onClick={() => { write(fresh()); setReset(false); setText(''); setReference(''); setSummary('') }}>Borrar sesión e iniciar otra</button>
         <button type="button" onClick={() => setReset(false)}>Cancelar</button>
       </div> : <button type="button" onClick={() => setReset(true)}>Reiniciar simulación</button>}
-    </aside>
+      </section>}
+      </div>
+    </article>
   </section>
 }
