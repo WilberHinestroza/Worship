@@ -2,6 +2,8 @@
 
 El laboratorio simula siete días con cuatro bloques por día. Hablar, contar un hecho y pasar el tiempo consumen un bloque. La demo del capítulo I usa su propio guion y guardado.
 
+La agenda muestra las promesas activas de Marcus. La espera rápida ejecuta los bloques ordinarios hasta la primera iniciativa o el primer vencimiento, o hasta el cierre de la semana si no sucede nada. El resumen de la última acción muestra cuánto tiempo pasó y los cambios hacia Marcus.
+
 ## Estado y reglas
 
 - El registro de hechos identifica al emisor, al público y, cuando corresponde, al hecho que se recordó o divulgó. Un hecho privado pasa a otra persona al contárselo explícitamente. La bitácora permite examinar el conocimiento de cada personaje.

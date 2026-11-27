@@ -184,6 +184,14 @@ export function execute(previous: World, command: Command): World {
 
 export const saveWorld = (world: World) => JSON.stringify({ version: 2, seed: world.seed, commands: world.commands })
 
+export function waitForEvent(world: World): World {
+  let next = world
+  while (next.slot < end && next.events.length === world.events.length) {
+    next = execute(next, { type: 'wait' })
+  }
+  return next
+}
+
 export function loadWorld(raw: string): World | null {
   try {
     const data = JSON.parse(raw)

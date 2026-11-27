@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { createWorld, end, execute, known, loadWorld, saveWorld, shareable } from './world.ts'
+import { createWorld, end, execute, known, loadWorld, saveWorld, shareable, waitForEvent } from './world.ts'
 
 const wait = world => execute(world, { type: 'wait' })
 const talk = (world, person, intent) => execute(world, { type: 'talk', person, intent })
@@ -47,4 +47,15 @@ test('importa acciones del laboratorio anterior al formato semanal', () => {
   const imported = loadWorld(legacy)
   assert.equal(imported.slot, 1)
   assert.equal(imported.relations.camila.toMarcus.trust, 6)
+})
+
+test('la espera rápida ejecuta los bloques ordinarios hasta el primer evento', () => {
+  const promised = talk(createWorld(8), 'camila', 'prometer')
+  const next = waitForEvent(promised)
+  assert.deepEqual(next, wait(wait(wait(promised))))
+  assert.equal(next.events.at(-1).kind, 'broken')
+  assert.deepEqual(loadWorld(saveWorld(next)), next)
+  let week = next
+  while (week.slot < end) week = waitForEvent(week)
+  assert.equal(waitForEvent(week), week)
 })
