@@ -91,6 +91,17 @@ ol { margin: .1rem 0 0; padding-left: 1.25rem; color: var(--muted); }
 .lab-gallery figcaption { color: var(--muted); margin-top: .4rem; }
 .vn-frame { max-width: 96rem; margin: 0 auto; }
 .vn-stage { display: flex; flex-direction: column; justify-content: space-between; gap: 5rem; min-height: min(47rem, calc(100svh - 8rem)); background-color: #21142e; background-position: center 34%; background-size: cover; padding: clamp(.9rem, 3vw, 2.5rem); }
+.layered-stage { position: relative; isolation: isolate; overflow: hidden; }
+.scene-sprite { position: absolute; z-index: -1; pointer-events: none; right: 4%; bottom: -28%; width: min(62%, 37rem); height: 114%; object-fit: contain; object-position: center bottom; filter: drop-shadow(0 .45rem .9rem #10091999); }
+.sprite-gallery { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }
+.sprite-gallery img { height: 17rem; object-fit: contain; background: radial-gradient(ellipse at center, #38274e, #1b1326); }
+.sprite-views { margin-bottom: .8rem; }
+.sprite-views button[aria-pressed="true"] { background: #d2a4ff; color: #18082c; }
+.sprite-face { display: block; position: relative; overflow: hidden; height: 17rem; border-radius: .3rem; background: radial-gradient(ellipse at center, #38274e, #1b1326); }
+.sprite-face img { position: absolute; left: 50%; top: 0; width: max(270%, 36rem); max-width: none; height: auto; transform: translateX(-50%); background: transparent; }
+@media (max-width: 45rem) {
+  .scene-sprite { right: 0; width: 78%; bottom: -15%; height: 106%; }
+}
 .vn-scene-header { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1rem; }
 .vn-scene-header h1 { margin: .25rem 0; font-size: clamp(1.5rem, 4vw, 2.85rem); text-shadow: 0 2px 9px #090610; }
 .vn-scene-header time { color: #f6e8ff; background: #171022e6; border: 1px solid var(--line); border-radius: .2rem; padding: .4rem .65rem; }

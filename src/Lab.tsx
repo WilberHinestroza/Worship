@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Dossier } from './Dossier.tsx'
+import { art, spriteArt, sprites } from './art.ts'
+import type { Sprite } from './art.ts'
+import { SceneSprite } from './SceneSprite.tsx'
 import { interpret, intents, profiles } from './simulation.ts'
 import type { Person } from './simulation.ts'
 import { createWorld, end, execute, known, loadWorld, saveWorld, shareable, time, waitForEvent } from './world.ts'
@@ -14,8 +17,10 @@ const illustrations = [
   { file: 'camila', title: 'Camila junto a la puerta' },
   { file: 'seul', title: 'Seúl al anochecer' },
   { file: 'pasillo', title: 'Pasillo del séptimo piso' },
+  { file: 'sala', title: 'Sala del apartamento' },
+  { file: 'gimnasio', title: 'Gimnasio universitario' },
 ] as const
-const art = (file: string) => `${import.meta.env.BASE_URL}art/${file}.webp`
+const stages = { camila: 'pasillo', valeria: 'sala', natalia: 'gimnasio' } as const
 
 function load() {
   try {
@@ -34,6 +39,7 @@ export function Lab() {
   const [filter, setFilter] = useState<'all' | 'person'>('all')
   const [summary, setSummary] = useState('')
   const [panel, setPanel] = useState<(typeof panels)[number] | null>(null)
+  const [faceView, setFaceView] = useState(false)
   const title = useRef<HTMLHeadingElement>(null)
   useEffect(() => { title.current?.focus() }, [])
   const relation = world.relations[person]
@@ -77,7 +83,8 @@ export function Lab() {
 
   return <section className="lab lab-novel">
     <article className="story lab-main">
-      <div className="vn-stage lab-stage" style={{ backgroundImage: `linear-gradient(180deg,#100a19d9,transparent 35%,#120b1c 100%), url("${art(person === 'camila' ? 'camila' : 'seul')}")` }}>
+      <div className="vn-stage lab-stage layered-stage" style={{ backgroundImage: `linear-gradient(180deg,#100a19d9,transparent 35%,#120b1c 100%), url("${art(stages[person])}")` }}>
+        <SceneSprite character={person} />
         <header className="vn-scene-header lab-header">
           <h1 tabIndex={-1} ref={title}>Laboratorio de personajes</h1>
           <time>{finished ? 'Semana terminada' : time(world.slot)}</time>
@@ -154,11 +161,27 @@ export function Lab() {
         </div>)}
       </div>
       </section>}
-      {panel === 'Galería' && <section className="lab-panel lab-gallery" aria-label="Galería">
+      {panel === 'Galería' && <section className="lab-panel" aria-label="Galería">
+        <h2>Personajes</h2>
+        <div className="lab-actions sprite-views" role="group" aria-label="Vista de personajes">
+          <button type="button" aria-pressed={!faceView} onClick={() => setFaceView(false)}>Cuerpo completo</button>
+          <button type="button" aria-pressed={faceView} onClick={() => setFaceView(true)}>Rostro</button>
+        </div>
+        <div className="lab-gallery sprite-gallery">
+          {(Object.keys(sprites) as Sprite[]).map(id => <figure key={id}>
+            <a className={faceView ? 'sprite-face' : undefined} href={spriteArt(id)} target="_blank" rel="noreferrer" aria-label={`Ver ilustración completa de ${sprites[id]}`}>
+              <img src={spriteArt(id)} alt={`${faceView ? 'Rostro' : 'Cuerpo completo'} de ${sprites[id]}`} loading="lazy" />
+            </a>
+            <figcaption>{sprites[id]}</figcaption>
+          </figure>)}
+        </div>
+        <h2>Fondos e ilustraciones</h2>
+        <div className="lab-gallery">
         {illustrations.map(({ file, title }) => <figure key={file}>
           <img src={art(file)} alt={title} loading="lazy" width="768" height="432" />
           <figcaption>{title}</figcaption>
         </figure>)}
+        </div>
       </section>}
       {panel === 'Relaciones' && <section className="lab-panel" aria-label="Relaciones">
       <h2>{names[person]}</h2>

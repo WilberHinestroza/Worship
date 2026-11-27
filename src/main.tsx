@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Lab } from './Lab.tsx'
 import { Dossier } from './Dossier.tsx'
+import { art } from './art.ts'
+import { SceneSprite } from './SceneSprite.tsx'
 import { choose, decode, encode, start } from './game.ts'
 import type { Game } from './game.ts'
 import { meters, scenes } from './story.ts'
@@ -9,7 +11,6 @@ import type { Meter } from './story.ts'
 import './style.css'
 
 const saveKey = 'worship-web:chapter-i'
-const art = (name: string) => `${import.meta.env.BASE_URL}art/${name}.webp`
 
 function readSave() {
   try {
@@ -29,6 +30,9 @@ function App() {
   const [gamePanel, setGamePanel] = useState<'history' | 'status' | 'systems' | null>(null)
   const heading = useRef<HTMLHeadingElement>(null)
   const scene = game ? scenes[game.scene] : null
+  const backdrop = game?.scene === 'entreno' ? 'gimnasio'
+    : game?.scene === 'cafe' ? 'sala'
+      : scene?.art || game?.scene === 'regreso' ? 'pasillo' : 'seul'
 
   useEffect(() => {
     heading.current?.focus()
@@ -88,7 +92,8 @@ function App() {
         </section>
       ) : (
         <section className="vn-frame" aria-label="Capítulo I">
-          <article className="vn-stage" style={{ backgroundImage: `linear-gradient(180deg,#0b0712cb,transparent 35%,#0d0814 100%), url("${art(scene.art ?? (game.scene === 'regreso' ? 'pasillo' : 'seul'))}")` }}>
+          <article className="vn-stage layered-stage" style={{ backgroundImage: `linear-gradient(180deg,#0b0712cb,transparent 35%,#0d0814 100%), url("${art(backdrop)}")` }}>
+            <SceneSprite character={scene.art ? 'camila' : 'marcus'} />
             <header className="vn-scene-header">
               <div>
                 <p className="eyebrow">CAPÍTULO I · EL REGRESO</p>
