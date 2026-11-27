@@ -10,7 +10,7 @@ const sheets = [
   ['viktor', 'leon', 'cassandra'],
 ] as const
 
-type CastMember = Person | 'marcus'
+export type CastMember = Person | 'marcus'
 export const lineup = sheets.flat()
 export const castName = (person: CastMember) => person === 'marcus' ? 'Protagonista' : profiles[person].name
 

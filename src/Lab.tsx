@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Dossier } from './Dossier.tsx'
 import { art } from './art.ts'
 import { CastArt, castName, lineup } from './CastArt.tsx'
+import type { CastMember } from './CastArt.tsx'
+import { SceneCast } from './SceneCast.tsx'
 import { interpret, intents, people, profiles } from './simulation.ts'
 import type { Person } from './simulation.ts'
 import { createWorld, end, execute, known, loadWorld, saveWorld, shareable, time, waitForEvent } from './world.ts'
@@ -31,6 +33,7 @@ function load() {
 export function Lab() {
   const [world, setWorld] = useState(load)
   const [person, setPerson] = useState<Person>('camila')
+  const [companions, setCompanions] = useState<CastMember[]>([])
   const [text, setText] = useState('')
   const [reference, setReference] = useState('')
   const [notice, setNotice] = useState('')
@@ -50,6 +53,7 @@ export function Lab() {
   const visibleIds = new Set(events.map(event => event.id))
   const latest = memories.at(-1)
   const agenda = world.promises.slice().sort((a, b) => a.due - b.due)
+  const onStage = [person, ...companions]
 
   function write(next: World) {
     setWorld(next)
@@ -83,7 +87,7 @@ export function Lab() {
   return <section className="lab lab-novel">
     <article className="story lab-main">
       <div className="vn-stage lab-stage layered-stage" style={{ backgroundImage: `linear-gradient(180deg,#100a19d9,transparent 35%,#120b1c 100%), url("${art(stages[person] ?? 'seul')}")` }}>
-        <div className="lab-cast-portrait"><CastArt person={person} portrait /></div>
+        <SceneCast people={onStage} speaker={person} />
         <header className="vn-scene-header lab-header">
           <h1 tabIndex={-1} ref={title}>Laboratorio de personajes</h1>
           <time>{finished ? 'Semana terminada' : time(world.slot)}</time>
@@ -96,13 +100,29 @@ export function Lab() {
       <div className="lab-controls">
       <label htmlFor="lab-cast">Hablar con</label>
       <select id="lab-cast" value={person} onChange={event => {
-        setPerson(event.target.value as Person)
+        const next = event.target.value as Person
+        setPerson(next)
+        setCompanions(current => current.filter(id => id !== next))
         setText('')
         setReference('')
         setNotice('')
       }}>
         {people.map(id => <option key={id} value={id}>{displayName(id)}</option>)}
       </select>
+      <details className="lab-companions">
+        <summary>Personajes en escena ({onStage.length})</summary>
+        <p>Selecciona hasta dos acompañantes para probar la composición.</p>
+        <div className="lab-actions">
+          {lineup.filter(id => id !== person).map(id => {
+            const selected = companions.includes(id)
+            return <button key={id} type="button" aria-pressed={selected}
+              disabled={companions.length === 2 && !selected}
+              onClick={() => setCompanions(current => selected ? current.filter(member => member !== id) : [...current, id])}>
+              {castName(id)}
+            </button>
+          })}
+        </div>
+      </details>
       <fieldset disabled={finished}>
         <legend>Acciones de Marcus</legend>
         <div className="lab-actions">

@@ -11,6 +11,7 @@ La agenda muestra las promesas activas de Marcus. La espera rápida ejecuta los 
 - Una promesa de volver se puede cumplir durante los tres bloques siguientes. Vence al terminar el tercero, hayan hablado o no. Su desenlace afecta la relación y vuelve a aparecer en conversaciones posteriores.
 - A partir del segundo día, cada personaje evalúa por la mañana si planifica tomar la iniciativa. Su objetivo, la relación y el estado actual pueden llevarlo a retomar una conversación, hacer una propuesta o marcar un límite. La decisión se ejecuta al llegar su bloque aunque Marcus solo haya esperado.
 - Se puede conversar con los 14 personajes no jugables establecidos. Camila, Valeria y Natalia pueden tomar la iniciativa desde el principio. El resto puede hacerlo después de la primera conversación. La Galería muestra al elenco completo, incluido el protagonista.
+- El Laboratorio permite colocar al interlocutor y hasta dos acompañantes sobre el mismo fondo. La selección de acompañantes prueba la composición visual. Los mensajes se dirigen al interlocutor seleccionado.
 - La entrada acepta mensajes de hasta 240 caracteres. Las expresiones reconocibles como «Te escucho» o «Prometo volver» conservan sus efectos. Los demás mensajes quedan en la memoria como conversación neutral y reciben una respuesta guionizada. Las respuestas usan reglas locales y varían según el personaje y su estado.
 
 ## Persistencia y pruebas
