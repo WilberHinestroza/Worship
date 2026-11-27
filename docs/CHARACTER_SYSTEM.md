@@ -12,6 +12,8 @@ La agenda muestra las promesas activas de Marcus. La espera rápida ejecuta los 
 - A partir del segundo día, cada personaje evalúa por la mañana si planifica tomar la iniciativa. Su objetivo, la relación y el estado actual pueden llevarlo a retomar una conversación, hacer una propuesta o marcar un límite. La decisión se ejecuta al llegar su bloque aunque Marcus solo haya esperado.
 - Se puede conversar con los 14 personajes no jugables establecidos. Camila, Valeria y Natalia pueden tomar la iniciativa desde el principio. El resto puede hacerlo después de la primera conversación. La Galería muestra al elenco completo, incluido el protagonista.
 - El Laboratorio permite colocar al interlocutor y hasta dos acompañantes sobre el mismo fondo. La selección de acompañantes prueba la composición visual. Los mensajes se dirigen al interlocutor seleccionado.
+- Cada personaje tiene sus sprites de saludo, tensión y sorpresa. Usa **Escena** para probarlos. Algunas acciones de conversación cambian el gesto del interlocutor automáticamente.
+- La vista de escritorio coloca diálogo, controles y estadísticas en el mismo espacio. Los paneles largos se abren como ventanas superpuestas con su propio desplazamiento.
 - La entrada acepta mensajes de hasta 240 caracteres. Las expresiones reconocibles como «Te escucho» o «Prometo volver» conservan sus efectos. Los demás mensajes quedan en la memoria como conversación neutral y reciben una respuesta guionizada. Las respuestas usan reglas locales y varían según el personaje y su estado.
 
 ## Persistencia y pruebas

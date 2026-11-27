@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Lab } from './Lab.tsx'
 import { Dossier } from './Dossier.tsx'
+import { Overlay } from './Overlay.tsx'
 import { art } from './art.ts'
 import { SceneSprite } from './SceneSprite.tsx'
 import { choose, decode, encode, start } from './game.ts'
@@ -124,6 +125,8 @@ function App() {
             <button type="button" onClick={goToMenu}>Menú</button>
           </nav>
           <p className="vn-notice" role="status">{notice}</p>
+          {gamePanel && <Overlay title={{ systems: 'Sistemas', status: 'Estado de la partida', history: 'Historial de decisiones' }[gamePanel]}
+            onClose={() => setGamePanel(null)}>
           {gamePanel === 'systems' && <Dossier game={game} />}
           {gamePanel === 'status' && <aside className="vn-panel" aria-label="Estado de la partida">
             <h2>Estado de Marcus</h2>
@@ -135,9 +138,9 @@ function App() {
             ))}
           </aside>}
           {gamePanel === 'history' && <aside className="vn-panel" aria-label="Historial de decisiones">
-              <h2>Historial de decisiones</h2>
               {game.history.length ? <ol>{game.history.map(entry => <li key={entry.scene}>{entry.label}</li>)}</ol> : <p>Aún no hay decisiones.</p>}
           </aside>}
+          </Overlay>}
         </section>
       )}
     </main>

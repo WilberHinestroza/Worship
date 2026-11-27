@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Dossier } from './Dossier.tsx'
+import { Overlay } from './Overlay.tsx'
 import { art } from './art.ts'
 import { CastArt, castName, lineup } from './CastArt.tsx'
 import type { CastMember } from './CastArt.tsx'
-import { SceneCast } from './SceneCast.tsx'
+import { poses, SceneCast } from './SceneCast.tsx'
+import type { Pose } from './SceneCast.tsx'
 import { interpret, intents, people, profiles } from './simulation.ts'
 import type { Person } from './simulation.ts'
 import { createWorld, end, execute, known, loadWorld, saveWorld, shareable, time, waitForEvent } from './world.ts'
@@ -13,7 +15,7 @@ const key = 'worship-web:simulation:v2'
 const fresh = () => createWorld(crypto.getRandomValues(new Uint32Array(1))[0])
 const displayName = (id: Person | 'marcus') => id === 'marcus' ? 'Marcus' : castName(id)
 const indicators = [['trust', 'Confianza'], ['affection', 'Afecto'], ['respect', 'Respeto'], ['resentment', 'Resentimiento']] as const
-const panels = ['Sistemas', 'Relaciones', 'Estado', 'Galería', 'Historial'] as const
+const panels = ['Escena', 'Sistemas', 'Relaciones', 'Estado', 'Galería', 'Historial', 'Recuerdos'] as const
 const illustrations = [
   { file: 'camila', title: 'Camila junto a la puerta' },
   { file: 'seul', title: 'Seúl al anochecer' },
@@ -34,6 +36,8 @@ export function Lab() {
   const [world, setWorld] = useState(load)
   const [person, setPerson] = useState<Person>('camila')
   const [companions, setCompanions] = useState<CastMember[]>([])
+  const [reactions, setReactions] = useState<Partial<Record<CastMember, Pose>>>({})
+  const [directing, setDirecting] = useState<CastMember | null>(null)
   const [text, setText] = useState('')
   const [reference, setReference] = useState('')
   const [notice, setNotice] = useState('')
@@ -54,6 +58,7 @@ export function Lab() {
   const latest = memories.at(-1)
   const agenda = world.promises.slice().sort((a, b) => a.due - b.due)
   const onStage = [person, ...companions]
+  const directed = directing && onStage.includes(directing) ? directing : person
 
   function write(next: World) {
     setWorld(next)
@@ -82,19 +87,34 @@ export function Lab() {
     setText('')
     setReference('')
   }
-  const act = (command: Command) => applyAction(execute(world, command))
+  const act = (command: Command) => {
+    const next = execute(world, command)
+    if (next !== world && command.type === 'talk') {
+      const pose = next.relations[command.person].tension >= 7 || command.intent === 'presionar' ? 'tension'
+        : ['escuchar', 'disculparse', 'bromear', 'cumplir'].includes(command.intent) ? 'warmth' : 'neutral'
+      setReactions(current => ({ ...current, [command.person]: pose }))
+    }
+    applyAction(next)
+  }
 
   return <section className="lab lab-novel">
     <article className="story lab-main">
+      <nav className="vn-quick lab-panel-nav" aria-label="Paneles de la partida">
+        {panels.map(item => <button key={item} type="button" aria-haspopup="dialog"
+          onClick={() => setPanel(item)}>{item}</button>)}
+      </nav>
       <div className="vn-stage lab-stage layered-stage" style={{ backgroundImage: `linear-gradient(180deg,#100a19d9,transparent 35%,#120b1c 100%), url("${art(stages[person] ?? 'seul')}")` }}>
-        <SceneCast people={onStage} speaker={person} />
+        <SceneCast people={onStage} speaker={person} reactions={reactions} />
         <header className="vn-scene-header lab-header">
           <h1 tabIndex={-1} ref={title}>Laboratorio de personajes</h1>
           <time>{finished ? 'Semana terminada' : time(world.slot)}</time>
         </header>
-        <section className="vn-dialogue lab-exchange" aria-label="Conversación reciente" aria-live="polite">
+        <section className="vn-dialogue lab-exchange" aria-label="Conversación reciente">
           <strong className="vn-speaker">{latest ? displayName(latest.speaker) : displayName(person)}</strong>
-          <p>{latest?.text ?? 'Elige una acción para iniciar la conversación.'}</p>
+          {reactions[person] && reactions[person] !== 'neutral' &&
+            <span className="lab-reaction-label">{poses[reactions[person]]}</span>}
+          <p aria-live="polite">{latest?.text ?? 'Elige una acción para iniciar la conversación.'}</p>
+          <small className="lab-outcome" role="status">{notice || summary || (finished ? 'Puedes revisar la bitácora o iniciar otra semana.' : '')}</small>
         </section>
       </div>
       <div className="lab-controls">
@@ -109,20 +129,13 @@ export function Lab() {
       }}>
         {people.map(id => <option key={id} value={id}>{displayName(id)}</option>)}
       </select>
-      <details className="lab-companions">
-        <summary>Personajes en escena ({onStage.length})</summary>
-        <p>Selecciona hasta dos acompañantes para probar la composición.</p>
-        <div className="lab-actions">
-          {lineup.filter(id => id !== person).map(id => {
-            const selected = companions.includes(id)
-            return <button key={id} type="button" aria-pressed={selected}
-              disabled={companions.length === 2 && !selected}
-              onClick={() => setCompanions(current => selected ? current.filter(member => member !== id) : [...current, id])}>
-              {castName(id)}
-            </button>
-          })}
-        </div>
-      </details>
+      <section className="lab-stats" aria-label="Estadísticas del personaje">
+        <h2>Estadísticas <span>de {displayName(person)}</span></h2>
+        <dl>
+          {[...indicators.map(([stat, label]) => [label, relation.toMarcus[stat]] as const), ['Tensión', relation.tension] as const]
+            .map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}<span>/10</span></dd></div>)}
+        </dl>
+      </section>
       <fieldset disabled={finished}>
         <legend>Acciones de Marcus</legend>
         <div className="lab-actions">
@@ -141,9 +154,43 @@ export function Lab() {
           <button type="submit" disabled={!text.trim()}>Enviar</button>
           <small id="lab-reply-help">Respuestas guionizadas según el personaje y la partida.</small>
         </form>
-        {shareOptions.length > 0 && <details className="lab-share"><summary>Compartir un recuerdo</summary><form onSubmit={event => {
+
+        <div className="lab-actions lab-time-actions">
+          <button type="button" onClick={() => act({ type: 'wait' })}>Pasar un bloque</button>
+          <button type="button" onClick={() => applyAction(waitForEvent(world))}>Esperar al siguiente evento</button>
+        </div>
+      </fieldset>
+      </div>
+      {panel && <Overlay title={panel} onClose={() => setPanel(null)}>
+      {panel === 'Escena' && <section className="lab-panel lab-companions">
+        <h3>Personajes en escena ({onStage.length})</h3>
+        <p>Selecciona hasta dos acompañantes para probar la composición.</p>
+        <div className="lab-actions">
+          {lineup.filter(id => id !== person).map(id => {
+            const selected = companions.includes(id)
+            return <button key={id} type="button" aria-pressed={selected}
+              disabled={companions.length === 2 && !selected}
+              onClick={() => setCompanions(current => selected ? current.filter(member => member !== id) : [...current, id])}>
+              {castName(id)}
+            </button>
+          })}
+        </div>
+        <h3>Emociones y gestos</h3>
+        <label htmlFor="direct-character">Personaje en escena</label>
+        <select id="direct-character" value={directed} onChange={event => setDirecting(event.target.value as CastMember)}>
+          {onStage.map(id => <option key={id} value={id}>{castName(id)}</option>)}
+        </select>
+        <label htmlFor="direct-pose">Gesto</label>
+        <select id="direct-pose" value={reactions[directed] ?? 'neutral'} onChange={event => {
+          const pose = event.target.value as Pose
+          setReactions(current => ({ ...current, [directed]: pose }))
+        }}>
+          {(Object.keys(poses) as Pose[]).map(pose => <option key={pose} value={pose}>{poses[pose]}</option>)}
+        </select>
+      </section>}
+      {panel === 'Recuerdos' && (finished ? <p>La semana terminó.</p> : shareOptions.length ? <form onSubmit={event => {
           event.preventDefault()
-          if (reference) act({ type: 'share', person, event: Number(reference) })
+          if (reference) { act({ type: 'share', person, event: Number(reference) }); setPanel(null) }
         }}>
           <label htmlFor="share-event">Contarle algo que ocurrió</label>
           <select id="share-event" value={reference} onChange={event => setReference(event.target.value)}>
@@ -151,17 +198,7 @@ export function Lab() {
             {shareOptions.map(event => <option key={event.id} value={event.id}>{displayName(event.speaker)} · {event.text}</option>)}
           </select>{' '}
           <button type="submit" disabled={!reference}>Contar</button>
-        </form></details>}
-        <div className="lab-actions lab-time-actions">
-          <button type="button" onClick={() => act({ type: 'wait' })}>Pasar un bloque</button>
-          <button type="button" onClick={() => applyAction(waitForEvent(world))}>Esperar al siguiente evento</button>
-        </div>
-      </fieldset>
-      <p className="lab-outcome" role="status">{notice || summary || (finished ? 'Puedes revisar la bitácora o iniciar otra semana.' : '')}</p>
-      <nav className="vn-quick lab-panel-nav" aria-label="Paneles de la partida">
-        {panels.map(item => <button key={item} type="button" aria-expanded={panel === item}
-          onClick={() => setPanel(panel === item ? null : item)}>{item}</button>)}
-      </nav>
+        </form> : <p>No hay recuerdos nuevos para contarle a {displayName(person)}.</p>)}
       {panel === 'Sistemas' && <Dossier world={world} person={person} />}
       {panel === 'Historial' && <section className="lab-panel" aria-label="Historial">
       <h2>Bitácora ({world.events.length})</h2>
@@ -230,7 +267,7 @@ export function Lab() {
         <button type="button" onClick={() => setReset(false)}>Cancelar</button>
       </div> : <button type="button" onClick={() => setReset(true)}>Reiniciar simulación</button>}
       </section>}
-      </div>
+      </Overlay>}
     </article>
   </section>
 }
