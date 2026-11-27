@@ -5,7 +5,10 @@ import { Dossier } from './Dossier.tsx'
 import { Overlay } from './Overlay.tsx'
 import { art } from './art.ts'
 import { SceneSprite } from './SceneSprite.tsx'
-import { choose, decode, encode, start } from './game.ts'
+import { choose, decode, encode } from './game.ts'
+import { ChapterView } from './ChapterView.tsx'
+import { chapterSaveKey, loadChapter, saveChapter, startChapter } from './chapter.ts'
+import type { Chapter } from './chapter.ts'
 import type { Game } from './game.ts'
 import { meters, scenes } from './story.ts'
 import type { Meter } from './story.ts'
@@ -22,7 +25,18 @@ function readSave() {
   }
 }
 
+function readChapterSave() {
+  try {
+    return loadChapter(localStorage.getItem(chapterSaveKey) ?? '')
+  } catch {
+    return null
+  }
+}
+
 function App() {
+  const [savedChapter, setSavedChapter] = useState(readChapterSave)
+  const [chapter, setChapter] = useState<Chapter | null>(null)
+  const [playerName, setPlayerName] = useState('Marcus')
   const [saved, setSaved] = useState(readSave)
   const [game, setGame] = useState<Game | null>(null)
   const [lab, setLab] = useState(false)
@@ -47,10 +61,23 @@ function App() {
   }
 
   function goToMenu() {
+    setChapter(null)
+    setConfirmNew(false)
     setGame(null)
     setLab(false)
     setNotice('')
     setGamePanel(null)
+  }
+
+  function storeChapter() {
+    if (!chapter) return false
+    try {
+      localStorage.setItem(chapterSaveKey, saveChapter(chapter))
+      setSavedChapter(chapter)
+      return true
+    } catch {
+      return false
+    }
   }
 
   function save() {
@@ -72,23 +99,33 @@ function App() {
         </button>
         <small>WEB EDITION · 2.0</small>
       </header>
-      {lab ? <Lab /> : !game || !scene ? (
+      {lab ? <Lab /> : chapter ? (
+        <ChapterView chapter={chapter} saved={savedChapter} onChange={setChapter} onSave={storeChapter} onMenu={goToMenu} />
+      ) : !game || !scene ? (
         <section className="hero" style={{ backgroundImage: `linear-gradient(90deg,#100a19 4%,#130b20b8 39%,#100a1933 100%), url("${art('seul')}")` }}>
           <div className="intro">
-            <p className="eyebrow">CAPÍTULO I <span>·</span> EL REGRESO</p>
+            <p className="eyebrow">TEMPORADA 1 <span>·</span> CAPÍTULO I</p>
             <h1 ref={heading} tabIndex={-1}>WORSHIP</h1>
             <p className="themes">LOVE · POWER · OBSESSION · TRANSCENDENCE</p>
             <p className="question">¿Hasta dónde llegarías para superar tu propia humanidad?</p>
             <div className="actions">
-              <button className="primary" type="button" onClick={() => saved ? setConfirmNew(true) : enter(start())}>Nueva partida</button>
-              {saved && <button type="button" onClick={() => enter(saved)}>Continuar partida</button>}
+              <button className="primary" type="button" onClick={() => setConfirmNew(true)}>Nueva partida</button>
+              {savedChapter && <button type="button" onClick={() => { setConfirmNew(false); setChapter(savedChapter) }}>Continuar partida</button>}
+              {saved && <button type="button" onClick={() => enter(saved)}>Continuar partida de la demo</button>}
               <button type="button" onClick={() => { setConfirmNew(false); setLab(true) }}>Laboratorio de personajes</button>
             </div>
-            {confirmNew && <div className="confirm" role="group" aria-label="Confirmar nueva partida">
-              <p>Al guardar una nueva partida, se reemplazará el avance anterior.</p>
-              <button type="button" onClick={() => enter(start())}>Empezar desde el capítulo I</button>{' '}
-              <button type="button" onClick={() => setConfirmNew(false)}>Cancelar</button>
-            </div>}
+            {confirmNew && <Overlay title="Nueva partida" onClose={() => setConfirmNew(false)}>
+              <form className="chapter-name" onSubmit={event => {
+                event.preventDefault()
+                setChapter(startChapter(playerName))
+                setConfirmNew(false)
+              }}>
+                <label htmlFor="player-name">Nombre del protagonista</label>
+                <input id="player-name" value={playerName} maxLength={32} onChange={event => setPlayerName(event.target.value)} />
+                {savedChapter && <p>Al guardar, se reemplazará el avance anterior del capítulo.</p>}
+                <button className="primary" type="submit">Empezar capítulo I</button>
+              </form>
+            </Overlay>}
           </div>
         </section>
       ) : (
