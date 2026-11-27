@@ -23,7 +23,9 @@ npm run preview
 
 ## GitHub Pages
 
-Sube el repositorio a GitHub y elige **Settings → Pages → Source → GitHub Actions**. El flujo se ejecuta al subir cambios a `main` o manualmente desde Actions. Publica `dist/`. Vite genera rutas relativas, por lo que funciona bajo el prefijo del repositorio. La partida se ejecuta en el navegador con contenido guionizado y sin servicios externos.
+Cada cambio en `main` instala dependencias, ejecuta pruebas y compila el juego. Para publicar, habilita **Settings → Pages → Source → GitHub Actions** y ejecuta manualmente el flujo **GitHub Pages** desde **Actions**. Para publicar también en cada cambio de `main`, crea la variable de repositorio `PAGES_ENABLED` con valor `true` en **Settings → Secrets and variables → Actions → Variables** después de habilitar Pages.
+
+El despliegue publica `dist/`. Vite genera rutas relativas, por lo que funciona bajo el prefijo del repositorio. La partida se ejecuta en el navegador con contenido guionizado y sin servicios externos.
 
 ## Documentación
 
