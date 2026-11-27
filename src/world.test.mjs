@@ -71,3 +71,15 @@ test('un personaje incorporado responde y conserva el mensaje libre al cargar', 
   assert.deepEqual(next.relations.mina.toMarcus, opening.relations.mina.toMarcus)
   assert.deepEqual(loadWorld(saveWorld(next)), next)
 })
+
+test('las actividades propias generan respuestas distintas y respetan los límites', () => {
+  const start = createWorld(7)
+  const valeria = execute(start, { type: 'talk', person: 'valeria', intent: 'charlar', activity: 0 })
+  const natalia = execute(start, { type: 'talk', person: 'natalia', intent: 'charlar', activity: 0 })
+  assert.match(known(valeria, 'valeria')[1].text, /no he enseñado/)
+  assert.match(known(natalia, 'natalia')[1].text, /Trato hecho/)
+  const pressured = talk(talk(start, 'natalia', 'presionar'), 'natalia', 'presionar')
+  const refusal = execute(pressured, { type: 'talk', person: 'natalia', intent: 'charlar', activity: 0 })
+  assert.doesNotMatch(known(refusal, 'natalia').at(-1).text, /Trato hecho/)
+  assert.deepEqual(loadWorld(saveWorld(valeria)), valeria)
+})

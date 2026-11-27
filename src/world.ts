@@ -1,5 +1,6 @@
 import { intents, people, profiles, restore as restoreLegacy } from './simulation.ts'
 import type { Intent, Person } from './simulation.ts'
+import { characterActions } from './characterActions.ts'
 
 const initialContacts = new Set<Person>(['camila', 'valeria', 'natalia'])
 export const blocks = ['08:00', '12:00', '16:00', '20:00']
@@ -15,7 +16,7 @@ type WorldEvent = {
   speaker: Actor; audience: Actor[]; text: string; reason?: string; reference?: number
 }
 export type Command =
-  | { type: 'talk'; person: Person; intent: Intent; text?: string }
+  | { type: 'talk'; person: Person; intent: Intent; text?: string; activity?: 0 | 1 }
   | { type: 'share'; person: Person; event: number }
   | { type: 'wait' }
 type Plan = { slot: number; person: Person; purpose: 'reconnect' | 'followUp' | 'setBoundary' }
@@ -82,7 +83,7 @@ function random(world: World, person: Person, salt: number) {
   return ((n ^ (n >>> 15)) >>> 0) / 4294967296
 }
 
-function respond(world: World, person: Person, message?: string) {
+function respond(world: World, person: Person, message?: string, activityReply?: string) {
   const profile = profiles[person]
   const { toMarcus: relation, tension } = world.relations[person]
   const recent = known(world, person).slice(-8)
@@ -106,7 +107,7 @@ function respond(world: World, person: Person, message?: string) {
   apply(world, person, reaction[move], 'fromMarcus')
   add(world, {
     kind: 'talk', speaker: person, audience: ['marcus'],
-    text: prefix + profile.lines[move][random(world, person, 51) < .5 ? 0 : 1],
+    text: prefix + (move !== 'distancia' && activityReply ? activityReply : profile.lines[move][random(world, person, 51) < .5 ? 0 : 1]),
     reason: `${profile.goal}. Eligió ${move} con tensión ${tension}.`,
     reference: recalled?.id,
   })
@@ -156,6 +157,7 @@ export function execute(previous: World, command: Command): World {
   if (previous.slot >= end) return previous
   if (command.type === 'share' && !shareable(previous, command.person).some(event => event.id === command.event)) return previous
   if (command.type === 'talk') {
+    if (command.activity !== undefined && characterActions[command.person][command.activity]?.intent !== command.intent) return previous
     const pending = previous.promises.some(item => item.person === command.person)
     if (command.intent === 'prometer' && (pending || previous.slot + 3 >= end)) return previous
     if (command.intent === 'cumplir' && !pending) return previous
@@ -170,16 +172,17 @@ export function execute(previous: World, command: Command): World {
       text: 'Marcus le contó lo que ocurrió.', reference: command.event })
   }
   if (command.type === 'talk') {
-    const { person, intent } = command
+    const { person, intent, activity } = command
+    const option = activity === undefined ? undefined : characterActions[person][activity]
     const promise = world.promises.find(item => item.person === person)
     const kind = intent === 'prometer' && !promise ? 'promise' : intent === 'cumplir' && promise ? 'fulfilled' : 'talk'
     const id = add(world, { kind, speaker: 'marcus', audience: [person],
-      text: command.text || intents[intent], reference: kind === 'fulfilled' ? promise?.event : undefined })
+      text: option?.label ?? (command.text || intents[intent]), reference: kind === 'fulfilled' ? promise?.event : undefined })
     if (kind === 'promise') world.promises.push({ person, event: id, due: world.slot + 3 })
     if (kind === 'fulfilled') world.promises = world.promises.filter(item => item.person !== person)
     if (intent !== 'cumplir' || promise) apply(world, person, changes[intent], 'toMarcus')
     if (intent === 'escuchar' || intent === 'bromear') apply(world, person, { affection: 1 }, 'fromMarcus')
-    respond(world, person, intent === 'charlar' ? command.text : undefined)
+    respond(world, person, intent === 'charlar' ? command.text : undefined, option?.reply)
   }
   advance(world)
   return world
@@ -210,6 +213,7 @@ export function loadWorld(raw: string): World | null {
       if (!command || (command.type !== 'wait' && !people.includes(command.person))) return null
       if (command.type === 'talk') {
         if (!Object.hasOwn(intents, command.intent) ||
+          (command.activity !== undefined && command.activity !== 0 && command.activity !== 1) ||
           (command.text !== undefined && (typeof command.text !== 'string' || command.text.length > 240))) return null
       } else if (command.type === 'share') {
         if (!Number.isInteger(command.event)) return null

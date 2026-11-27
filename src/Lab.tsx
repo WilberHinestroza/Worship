@@ -3,11 +3,13 @@ import { Dossier } from './Dossier.tsx'
 import { Overlay } from './Overlay.tsx'
 import { art } from './art.ts'
 import { CastArt, castName, lineup } from './CastArt.tsx'
+import { characterActions } from './characterActions.ts'
 import type { CastMember } from './CastArt.tsx'
 import { poses, SceneCast } from './SceneCast.tsx'
 import type { Pose } from './SceneCast.tsx'
-import { interpret, intents, people, profiles } from './simulation.ts'
+import { intents, people, profiles } from './simulation.ts'
 import type { Person } from './simulation.ts'
+import type { Intent } from './simulation.ts'
 import { createWorld, end, execute, known, loadWorld, saveWorld, shareable, time, waitForEvent } from './world.ts'
 import type { Command, World } from './world.ts'
 
@@ -38,7 +40,7 @@ export function Lab() {
   const [companions, setCompanions] = useState<CastMember[]>([])
   const [reactions, setReactions] = useState<Partial<Record<CastMember, Pose>>>({})
   const [directing, setDirecting] = useState<CastMember | null>(null)
-  const [text, setText] = useState('')
+  const [commonIntent, setCommonIntent] = useState<Intent>('escuchar')
   const [reference, setReference] = useState('')
   const [notice, setNotice] = useState('')
   const [reset, setReset] = useState(false)
@@ -59,6 +61,8 @@ export function Lab() {
   const agenda = world.promises.slice().sort((a, b) => a.due - b.due)
   const onStage = [person, ...companions]
   const directed = directing && onStage.includes(directing) ? directing : person
+  const unavailable = (intent: Intent) => (intent === 'cumplir' && !promise) ||
+    (intent === 'prometer' && (!!promise || world.slot + 3 >= end))
 
   function write(next: World) {
     setWorld(next)
@@ -69,6 +73,11 @@ export function Lab() {
   function applyAction(next: World) {
     if (next === world) { setNotice('Esta acción no está disponible en este bloque.'); return }
     const updates = next.events.slice(world.events.length)
+    const broken = updates.filter(event => event.kind === 'broken').map(event => event.audience[0])
+    if (broken.length) setReactions(current => ({
+      ...current,
+      ...Object.fromEntries(broken.map(id => [id, 'disappointment'])),
+    }))
     const changes = people.flatMap(id => {
       const before = world.relations[id].toMarcus
       const after = next.relations[id].toMarcus
@@ -84,14 +93,15 @@ export function Lab() {
     })
     setSummary([`Bloques avanzados: ${next.slot - world.slot}`, ...milestones, ...changes].join(' · '))
     write(next)
-    setText('')
     setReference('')
   }
   const act = (command: Command) => {
     const next = execute(world, command)
     if (next !== world && command.type === 'talk') {
+      const activityReaction = command.activity === undefined ? undefined : characterActions[command.person][command.activity].reaction
       const pose = next.relations[command.person].tension >= 7 || command.intent === 'presionar' ? 'tension'
-        : ['escuchar', 'disculparse', 'bromear', 'cumplir'].includes(command.intent) ? 'warmth' : 'neutral'
+        : activityReaction ?? (command.intent === 'cumplir' ? 'pride'
+        : ['escuchar', 'disculparse', 'bromear'].includes(command.intent) ? 'warmth' : 'neutral')
       setReactions(current => ({ ...current, [command.person]: pose }))
     }
     applyAction(next)
@@ -123,12 +133,19 @@ export function Lab() {
         const next = event.target.value as Person
         setPerson(next)
         setCompanions(current => current.filter(id => id !== next))
-        setText('')
         setReference('')
         setNotice('')
       }}>
         {people.map(id => <option key={id} value={id}>{displayName(id)}</option>)}
       </select>
+      <section className="lab-reactions" aria-label="Vista previa de reacciones">
+        <h2>Reacciones</h2>
+        <div className="lab-reaction-options" role="group" aria-label={`Reacciones de ${displayName(person)}`}>
+          {(Object.keys(poses) as Pose[]).map(pose => <button key={pose} type="button"
+            aria-pressed={(reactions[person] ?? 'neutral') === pose}
+            onClick={() => setReactions(current => ({ ...current, [person]: pose }))}>{poses[pose]}</button>)}
+        </div>
+      </section>
       <section className="lab-stats" aria-label="Estadísticas del personaje">
         <h2>Estadísticas <span>de {displayName(person)}</span></h2>
         <dl>
@@ -137,23 +154,21 @@ export function Lab() {
         </dl>
       </section>
       <fieldset disabled={finished}>
-        <legend>Acciones de Marcus</legend>
-        <div className="lab-actions">
-          {(Object.keys(intents) as (keyof typeof intents)[]).filter(intent => intent !== 'charlar').map(intent =>
-            <button key={intent} type="button"
-              disabled={(intent === 'cumplir' && !promise) || (intent === 'prometer' && (!!promise || world.slot + 3 >= end))}
-              onClick={() => act({ type: 'talk', person, intent })}>{intents[intent]}</button>)}
+        <legend>Conversación</legend>
+        <div className="lab-actions lab-character-actions">
+          {([0, 1] as const).map(activity => {
+            const option = characterActions[person][activity]
+            return <button key={activity} type="button"
+              onClick={() => act({ type: 'talk', person, intent: option.intent, activity })}>{option.label}</button>
+          })}
         </div>
-        <form onSubmit={event => {
-          event.preventDefault()
-          const message = text.trim()
-          if (message) act({ type: 'talk', person, intent: interpret(message) ?? 'charlar', text: message })
-        }}>
-          <label htmlFor="free-action">Escribe un mensaje o una acción</label>
-          <input id="free-action" value={text} maxLength={240} onChange={event => setText(event.target.value)} placeholder="¿Cómo te fue hoy?" aria-describedby="lab-reply-help" />
-          <button type="submit" disabled={!text.trim()}>Enviar</button>
-          <small id="lab-reply-help">Respuestas guionizadas según el personaje y la partida.</small>
-        </form>
+        <div className="lab-common-actions">
+          <select aria-label="Otras acciones" value={commonIntent} onChange={event => setCommonIntent(event.target.value as Intent)}>
+            {(Object.keys(intents) as Intent[]).filter(intent => intent !== 'charlar').map(intent =>
+              <option key={intent} value={intent} disabled={unavailable(intent)}>{intents[intent]}</option>)}
+          </select>
+          <button type="button" disabled={unavailable(commonIntent)} onClick={() => act({ type: 'talk', person, intent: commonIntent })}>Hacer</button>
+        </div>
 
         <div className="lab-actions lab-time-actions">
           <button type="button" onClick={() => act({ type: 'wait' })}>Pasar un bloque</button>
@@ -263,7 +278,7 @@ export function Lab() {
         </li>)}</ul> : <p>No hay compromisos pendientes.</p>}
       </section>
       {reset ? <div className="lab-actions">
-        <button type="button" onClick={() => { write(fresh()); setReset(false); setText(''); setReference(''); setSummary('') }}>Borrar sesión e iniciar otra</button>
+        <button type="button" onClick={() => { write(fresh()); setReset(false); setReactions({}); setReference(''); setSummary('') }}>Borrar sesión e iniciar otra</button>
         <button type="button" onClick={() => setReset(false)}>Cancelar</button>
       </div> : <button type="button" onClick={() => setReset(true)}>Reiniciar simulación</button>}
       </section>}

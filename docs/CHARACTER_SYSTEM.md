@@ -14,7 +14,7 @@ La agenda muestra las promesas activas de Marcus. La espera rápida ejecuta los 
 - El Laboratorio permite colocar al interlocutor y hasta dos acompañantes sobre el mismo fondo. La selección de acompañantes prueba la composición visual. Los mensajes se dirigen al interlocutor seleccionado.
 - Cada personaje tiene sus sprites de saludo, tensión y sorpresa. Usa **Escena** para probarlos. Algunas acciones de conversación cambian el gesto del interlocutor automáticamente.
 - La vista de escritorio coloca diálogo, controles y estadísticas en el mismo espacio. Los paneles largos se abren como ventanas superpuestas con su propio desplazamiento.
-- La entrada acepta mensajes de hasta 240 caracteres. Las expresiones reconocibles como «Te escucho» o «Prometo volver» conservan sus efectos. Los demás mensajes quedan en la memoria como conversación neutral y reciben una respuesta guionizada. Las respuestas usan reglas locales y varían según el personaje y su estado.
+- El Laboratorio ofrece acciones propias de cada personaje y un selector de acciones comunes. Las acciones propias tienen respuestas contextuales y el personaje puede tomar distancia si la tensión es alta. El texto escrito de las sesiones anteriores sigue disponible en su historial.
 
 ## Persistencia y pruebas
 

@@ -3,7 +3,16 @@ import { castName } from './CastArt.tsx'
 import type { CastMember } from './CastArt.tsx'
 import type { Person } from './simulation.ts'
 
-export const poses = { neutral: 'Neutral', warmth: 'Sonríe y saluda', tension: 'Cruza los brazos', surprise: 'Se sorprende y retrocede' } as const
+export const poses = {
+  neutral: 'Neutral',
+  warmth: 'Feliz',
+  sadness: 'Triste',
+  disappointment: 'Decepción',
+  pride: 'Orgullo',
+  strength: 'Fuerza',
+  tension: 'Tensión',
+  surprise: 'Sorpresa',
+} as const
 export type Pose = keyof typeof poses
 
 export function SceneCast({ people, speaker, reactions }: {
