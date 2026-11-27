@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Lab } from './Lab.tsx'
 import { choose, decode, encode, start } from './game.ts'
 import type { Game } from './game.ts'
 import { meters, scenes } from './story.ts'
@@ -21,6 +22,7 @@ function readSave() {
 function App() {
   const [saved, setSaved] = useState(readSave)
   const [game, setGame] = useState<Game | null>(null)
+  const [lab, setLab] = useState(false)
   const [notice, setNotice] = useState('')
   const [confirmNew, setConfirmNew] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
@@ -28,7 +30,7 @@ function App() {
 
   useEffect(() => {
     heading.current?.focus()
-  }, [game?.scene])
+  }, [game?.scene, lab])
 
   function enter(next: Game) {
     setGame(next)
@@ -50,13 +52,13 @@ function App() {
   return (
     <main>
       <header className="top">
-        <button className="brand" type="button" onClick={() => { setGame(null); setNotice('') }} aria-label="WORSHIP, menú principal">
+        <button className="brand" type="button" onClick={() => { setLab(false); setGame(null); setNotice('') }} aria-label="WORSHIP, menú principal">
           <span aria-hidden="true">◇</span> WORSHIP
         </button>
         {game && <button className="quiet" type="button" onClick={save}>Guardar partida</button>}
         {!game && <small>WEB EDITION · 2.0</small>}
       </header>
-      {!game || !scene ? (
+      {lab ? <Lab /> : !game || !scene ? (
         <section className="hero" style={{ backgroundImage: `linear-gradient(90deg,#100a19 4%,#130b20b8 39%,#100a1933 100%), url("${art('seul')}")` }}>
           <div className="intro">
             <p className="eyebrow">CAPÍTULO I <span>·</span> EL REGRESO</p>
@@ -64,7 +66,8 @@ function App() {
             <p className="themes">LOVE · POWER · OBSESSION · TRANSCENDENCE</p>
             <p className="question">¿Hasta dónde llegarías para superar tu propia humanidad?</p>
             <div className="actions">
-              <button className="primary" type="button" onClick={() => saved ? setConfirmNew(true) : enter(start())}>Nueva partida</button>
+              <button className="primary" type="button" onClick={() => { setConfirmNew(false); setLab(true) }}>Laboratorio de personajes</button>
+              <button type="button" onClick={() => saved ? setConfirmNew(true) : enter(start())}>Demo del capítulo I</button>
               {saved && <button type="button" onClick={() => enter(saved)}>Continuar partida</button>}
             </div>
             {confirmNew && <div className="confirm" role="group" aria-label="Confirmar nueva partida">

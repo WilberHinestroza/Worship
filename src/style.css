@@ -45,6 +45,18 @@ summary { cursor: pointer; padding: .75rem 0; }
 ol { margin: .1rem 0 0; padding-left: 1.25rem; color: var(--muted); }
 .notice { color: var(--violet); margin-bottom: 0; }
 .notice:empty { margin: 0; }
+.lab h1 { font-size: clamp(1.8rem, 5vw, 3rem); }
+.lab label { display: block; margin-top: 1rem; color: var(--muted); }
+.lab select, .lab input { font: inherit; color: inherit; min-height: 44px; background: #241432; border: 1px solid #825ab0; border-radius: .3rem; padding: .55rem; max-width: 100%; }
+.lab input { width: min(100%, 23rem); margin: .3rem .5rem .3rem 0; }
+.lab-log { margin-block: 1rem; }
+.lab-entry { border-left: 2px solid var(--line); padding-left: .9rem; margin-block: .85rem; }
+.lab-entry p { margin: .2rem 0; }
+.lab-entry strong { color: var(--violet); }
+.lab-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+.lab dl { display: grid; grid-template-columns: 1fr auto; gap: .4rem; }
+.lab dd { margin: 0; }
+.lab details { margin-bottom: 1rem; }
 @media (max-width: 45rem) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .hero { background-position: 57% center; align-items: end; padding-bottom: max(3rem, env(safe-area-inset-bottom)); }
